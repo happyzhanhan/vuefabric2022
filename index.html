@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+  <title>vuefabric2020</title>
+  <link rel="stylesheet" href="./static/font/iconfont.css" />
+  <style>
+    *{
+      margin:0;
+      padding:0;
+      border:0;
+    }
+    #app{
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+  <script type="text/javascript" src="./static/js/polyfill.min.js"></script>
+  <script type="text/javascript" src="./static/js/browser.min.js"></script>
+
+  <script type="text/javascript" src="./static/js/fabric5.js"></script>
+  <script type="text/javascript" src="./static/js/customiseControls.js"></script>
+
+  <!--<script type="text/javascript" src="./static/js/jquery-1.3.2.min.js"></script>-->
+    <!--<script type="text/javascript" src="./static/js/jquery-barcode.js"></script>-->
+  <script type="text/javascript" src="./static/js/sample/prototype.js"></script>
+  <script type="text/javascript" src="./static/js/prototype-barcode.js"></script>
+</head>
+
+<body style="width: 100%; height: 100%;">
+
+  <div id="app"></div>
+  <div id="demo" style="position: fixed; bottom:0; left:0; z-index:999;"></div>
+</body>
+<script  type="text/javascript">
+  function demo () {
+    let value = 'demo';
+    let btype = 'datamatrix';
+    let settings = {
+      addQuietZone: false,
+      barHeight: '50',
+      barWidth: '1',
+      bgColor: '#FFFFFF',
+      color: '#ff0000',
+      fontSize: 10,
+      marginHRI: 5,
+      moduleSize: '5',
+      output: 'css',
+      posX: '10',
+      posY: '20',
+      showHRI: true
+    }
+    console.log(document.querySelector('#demo'))
+    document.querySelector('#demo').barcode(value, btype, settings);
+  }
+  demo();
+</script>
+<!---->
+</html>
