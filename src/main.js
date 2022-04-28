@@ -7,12 +7,10 @@ import {FabricCanvas } from '../src/components';
 import GeminiScrollbar from 'vue-gemini-scrollbar'
 import JsBarcode from 'jsbarcode'
 import jrQrcode from "jr-qrcode"
-import jsbar from './utils/js-barcode'
 
 Vue.use(VueI18n) // 通过插件的形式挂载
 Vue.use(GeminiScrollbar);
 Vue.use(FabricCanvas);
-Vue.use(jsbar)
 
 /*Vue.use(JsBarcode)
 Vue.use(jrQrcode)*/

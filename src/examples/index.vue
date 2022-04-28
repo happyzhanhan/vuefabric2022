@@ -413,7 +413,8 @@
             </div>
         </div>
     </div>
-    <div style="width: 200px; height: 200px; position: fixed; top:0; left:0;" id="showqrcode"></div>
+
+    <div id="datamax"></div>
 </div>
 </template>
 
@@ -542,7 +543,7 @@
             }
         },
         components:{html2canvas},
-        mounted(){
+        async mounted(){
             window.onresize = (() => {
                 this.boxWidth = document.documentElement.clientWidth-121;  //外框宽
                 this.boxHeight = document.documentElement.clientHeight-60;   //外框高
@@ -582,6 +583,17 @@
            // this.draw('Qrcode');
             //this.draw('Html');
 
+            let bardata = await this.$refs.canvas.createElement('Barcodematrix',
+                {imgText:'989874',
+                 barlineWidth:50,
+                 width:50,
+                 height:50,
+                 color:"#ff0000",
+                 left:0,
+                 top:0,
+                id:9} );
+            console.warn('bardata',bardata)
+
             this.$refs.canvas.SetNewZoom(1,0,0);
 
             this.scaleCalc(); //计算刻度
@@ -589,7 +601,7 @@
         },
         methods:{
             barcodeshow(){
-                var value = '12345670';
+                // var value = '12345670';
                 // var btype = 'datamatrix';
                 // var settings = {
                 //     addQuietZone: false,
@@ -606,7 +618,18 @@
                 //     showHRI: true
                 // }
                 // console.log(document.querySelector("#showqrcode"), $('#showqrcode'))
-                this.barcode(document.querySelector("#showqrcode"),  value, "datamatrix",{barWidth:2, barHeight:30,showHRI:false});
+                // this.barcode(document.querySelector("#showqrcode"),  value, "datamatrix",{barWidth:2, barHeight:30,showHRI:false});
+                var svgNode =  DATAMatrix({
+                    msg :  "3962123456"
+                    ,dim :   300
+                    ,rct :   0
+                    ,pad :   1
+                    ,pal : ["#ff0000", "#f2f4f8"]
+                    ,vrb :   0
+
+                });
+                console.log(svgNode)
+                document.querySelector("#datamax").appendChild(svgNode)
             },
             handleSave() {
                 html2canvas(document.querySelector("#capture")).then(canvas => {

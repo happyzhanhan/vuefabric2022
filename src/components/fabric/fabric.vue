@@ -4,6 +4,7 @@
       <div style="position: fixed; top: -9999999999999999999px; left:800px; z-index:999999;">
           <img id="barcode" />
           <div id="barbox"></div>
+          <div id="datamatrixbox"></div>
           <img id="qrcode" :src="qrcodeImg" alt="" class="qrcodeImg">
       </div>
       <input type="text" id="code" style="position:fixed; top:-1000000px; z-index:9999;">
@@ -20,6 +21,7 @@
 </template>
 
 <script>
+    import html2canvas from 'html2canvas'
   import { on, off } from '../../examples/event'   //时间监听
   import Utils from '../../utils/utils';   //事件注册
   import initAligningGuidelines  from '../../utils/guidelines';  //组件间对齐线
@@ -28,7 +30,7 @@
 
   export default {
     name: 'FabricCanvas',
-    components:{vueContextMenu},
+    components:{vueContextMenu,html2canvas},
     props: {
       width: {
         type: Number,
@@ -3814,6 +3816,10 @@
                         canvasObject = await that.createBarcode(options);
                         resolve(canvasObject);
                         return canvasObject;
+                    case 'Barcodematrix':           //----------------------------------------------------------------------------------------条码
+                        canvasObject = await that.createBarcodedatamatrix(options);
+                        resolve(canvasObject);
+                        return canvasObject;
                     case 'Qrcode':            //----------------------------------------------------------------------------------------二维码
                         options.imgText = options.imgText ? options.imgText : '123456789';
                         canvasObject = await that.createQrcode(options);
@@ -4259,7 +4265,8 @@
                         });
 
                         break;
-                    case 'TextRect':    //-----------------------------------------------------------------------------------------可编辑文本加： 边距 背景 边框
+                    case 'TextRect':
+                        //-----------------------------------------------------------------------------------------可编辑文本加： 边距 背景 边框
                         // console.warn('文本矩形参数：',options.zIndex);
 
 
@@ -5145,6 +5152,96 @@
             });
         },
 
+        async createBarcodedatamatrix(options) {
+            console.log('创建datamatrix条形码：',options);
+            let that = this;
+            let curcanvas = this.canvas;
+            return new Promise(function (resolve, reject) {
+                let canvasObject;
+                options.imgText = options.imgText ? options.imgText : '12345670';
+
+                var img = new Image();
+                var svgNode =  DATAMatrix({
+                    msg :  options.imgText
+                    ,dim :   options.barlineWidth
+                    ,rct :   0
+                    ,pad :   1
+                    ,pal : [options.color ? options.color : "#000000", "#f2f4f8"]
+                    ,vrb :   0
+                });
+                // img.src=svgNode
+                // document.getElementById('datamatrixbox').append(svgNode)
+
+                console.warn(svgNode)
+                // img.src = 'data:image/svg+xml,' + btoa(unescape(encodeURIComponent(svgNode.innerHTML)));
+                // console.warn(img)
+
+                document.getElementById('datamatrixbox').append(svgNode)
+
+                html2canvas(document.getElementById('datamatrixbox')).then(function(canvas) {
+                    let url = canvas.toDataURL();
+                    console.log(url)
+
+                    let img = new Image();
+                    img.crossOrigin = 'Anonymous';
+                    img.src = url;
+
+                    img.onload = () => {
+
+                        console.log(img)
+
+                        document.getElementById('datamatrixbox').append(img)
+
+                        canvasObject = new fabric.Image(img, {
+                            left: options.left,
+                            top: options.top,
+                            id: options.id,
+
+                            width: options.width,
+                            height: options.height,
+                            copyId: options.copyId,
+                            zIndex: options.zIndex ? options.zIndex : options.id,
+                            type: options.type ? options.type : '0',
+                            color: options.lineColor,
+
+                            name: options.name ? options.name : 'Barcodedatamatrix',
+                            angle: options.angle,
+                            component: "component",
+                            isType: 'Barcodedatamatrix',
+                            isDiff: 'static',
+                            fill: options.fill ? options.fill : '#000000',
+                            flipX: false,
+                            flipY: false,
+                            lockSkewingX: true,                  //禁掉按住shift时的变形
+                            lockSkewingY: true,
+                            originX: 'left',
+                            originY: 'top',
+                            lockUniScaling: true,
+                            imgText: options.imgText,
+                            content: options.imgText,
+
+                            lineColor: options.lineColor,
+                            hasRotatingPoint: false,                          //元素是否旋转
+
+                            visible: options.visible,
+                            eyeshow: options.eyeshow,
+                            screenIndex: options.screenIndex,
+
+                        });
+
+                        console.log(canvasObject)
+                        curcanvas.add(canvasObject);
+                        that.setActiveObject(canvasObject);
+                        that.setTop();                                         //遮罩置顶
+                        curcanvas.renderAll();
+
+                        resolve(canvasObject);
+                    }
+
+                })
+
+            });
+        },
 
         //获取创建条码的结果
         async createBarcode(options) {
@@ -5196,7 +5293,7 @@
 
                 JsBarcode("#barcode" + options.id, options.imgText, {
                     id: options.id,
-                    format: options.format ? options.format : "datamatrix",  //条形码的格式
+                    format: options.format ? options.format : "CODE128",  //条形码的格式
                     lineColor: options.color ? options.color : "#000000",  //线条颜色
                     margin: options.margin ? options.margin : 0, // 条码四边空白（默认为10px）
                     width: options.barlineWidth, //线宽

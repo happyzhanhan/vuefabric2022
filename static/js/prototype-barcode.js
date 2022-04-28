@@ -1078,6 +1078,7 @@ var Barcode = {
     if (settings.showHRI){
       content += "<div style=\"clear:both; width: 100%; background-color: " + settings.bgColor + "; color: " + settings.color + "; text-align: center; font-size: " + settings.fontSize + "px; margin-top: " + settings.marginHRI + "px;\">"+hri+"</div>";
     }
+    console.log($container)
     this.antialiasing($container);
     this.resize($container, mw * columns).update(content);
   },
@@ -1090,6 +1091,7 @@ var Barcode = {
   // css 2D barcode renderer
   digitToCss2D: function($container, settings, digit, hri){
     var s = Barcode.intval(settings.moduleSize);
+    console.log('s',s)
     this.digitToCssRenderer($container, settings, digit, hri, s, s);
   },
   // svg barcode renderer
@@ -1219,7 +1221,6 @@ var barcodeMethod = {
   barcode: function(element, datas, type, settings) {
       // console.warn(element)
     var $this = $(element);
-       console.warn($this)
     var digit = "",
         hri   = "",
         code  = "",
@@ -1292,7 +1293,9 @@ var barcodeMethod = {
     if ( !b2d && settings.addQuietZone) digit = "0000000000" + digit + "0000000000";
 
     var fname = 'digitTo' + settings.output.charAt(0).toUpperCase() + settings.output.substr(1) + (b2d ? '2D' : '');
-    if (typeof(Barcode[fname]) == 'function') {
+      console.warn(fname,digit)
+
+      if (typeof(Barcode[fname]) == 'function') {
       Barcode[fname]($this, settings, digit, hri);
     }
 
