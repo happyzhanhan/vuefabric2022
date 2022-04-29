@@ -585,7 +585,7 @@
 
             let bardata = await this.$refs.canvas.createElement('Barcodematrix',
                 {imgText:'989874',
-                 barlineWidth:50,
+                 barlineWidth:500,
                  width:50,
                  height:50,
                  color:"#ff0000",

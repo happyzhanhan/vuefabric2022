@@ -874,6 +874,7 @@
           let bfpoint = bg.calcCoords();
           let bgbound = bg.getBoundingRect();
           let objpoint = obj.calcCoords();
+
           if(obj.angle==0){
               if(obj.getBoundingRect().top < bfpoint.tl.y  ){
                   obj.set({
@@ -891,14 +892,14 @@
               }
               if( objpoint.tl.x + obj.getBoundingRect().width >  bfpoint.tl.x + bgbound.width ){
                   obj.set({
-                      left : bg.left + bg.width -obj.width    ,//obj.left - (objpoint.tl.x + obj.getBoundingRect().width -(bfpoint.tl.x + bgbound.width)),
+                      left : bg.left + bg.width -obj.width*obj.scaleX    ,//obj.left - (objpoint.tl.x + obj.getBoundingRect().width -(bfpoint.tl.x + bgbound.width)),
                   });
                   obj.setCoords();
                   that.canvas.renderAll();
               }
               if( objpoint.tl.y + obj.getBoundingRect().height >   bfpoint.tl.y + bgbound.height){
                   obj.set({
-                      top :   bg.top + bg.height -obj.height,// obj.top - (obj.getBoundingRect().top + obj.getBoundingRect().height -(bg.top + bg.height)),
+                      top :   bg.top + bg.height -obj.height*obj.scaleY,// obj.top - (obj.getBoundingRect().top + obj.getBoundingRect().height -(bg.top + bg.height)),
                   });
                   obj.setCoords();
                   that.canvas.renderAll();
@@ -935,6 +936,7 @@
                   that.canvas.renderAll();
               }
           }
+
 
 
           /*if(obj.getBoundingRect().top < bg.getBoundingRect().top || obj.getBoundingRect().left < bg.getBoundingRect().left){
@@ -5197,8 +5199,15 @@
                             top: options.top,
                             id: options.id,
 
-                            width: options.width,
-                            height: options.height,
+                            // width: options.width,
+                            // height: options.height,
+                            // scaleX:1,
+                            // scaleY:1,
+
+                            scaleX: options.width / img.width,
+                            scaleY: options.height / img.height,
+
+
                             copyId: options.copyId,
                             zIndex: options.zIndex ? options.zIndex : options.id,
                             type: options.type ? options.type : '0',
@@ -5223,7 +5232,7 @@
                             lineColor: options.lineColor,
                             hasRotatingPoint: false,                          //元素是否旋转
 
-                            visible: options.visible,
+                            visible: options.visible !== false ? true : options.visible,                          //元素是否可见
                             eyeshow: options.eyeshow,
                             screenIndex: options.screenIndex,
 
@@ -5232,11 +5241,15 @@
                         console.log(canvasObject)
                         curcanvas.add(canvasObject);
                         that.setActiveObject(canvasObject);
-                        that.setTop();                                         //遮罩置顶
+                       // that.setTop();                                         //遮罩置顶
                         curcanvas.renderAll();
+
 
                         resolve(canvasObject);
                     }
+                    img.onerror = function () {
+                        reject(new Error('barcode error load!'));
+                    };
 
                 })
 
