@@ -2638,6 +2638,7 @@
 
                     object.top = object.top + 10 + this.yTop;
                     object.left = object.left + 10 + this.xLeft;
+
                     if (object.isType === 'Barcode') {
                         object.width = object.width * object.scaleX;
                         object.height = object.height * object.scaleY;
@@ -5101,7 +5102,7 @@
                     var img = new Image();
                     var svgNode =  DATAMatrix({
                         msg :  options.imgText
-                        ,dim :   options.barlineWidth
+                        ,dim :   options.width
                         ,rct :   0
                         ,pad :   0
                         ,pal : [options.lineColor ? options.lineColor : "#000000", "#f2f4f8"]
@@ -5147,8 +5148,8 @@
                                 // scaleX:1,
                                 // scaleY:1,
 
-                                scaleX: options.width / img.width,
-                                scaleY: options.height / img.height,
+                                // scaleX: options.width / img.width,
+                                // scaleY: options.height / img.width,
 
 
                                 copyId: options.copyId,
