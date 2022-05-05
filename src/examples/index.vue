@@ -580,10 +580,10 @@
           //  this.draw('TextRectBox');
             this.draw('Rect');
 
-           // this.draw('Qrcode');
+            this.draw('Qrcode');
             //this.draw('Html');
 
-            let bardata = await this.$refs.canvas.createElement('Barcodematrix',
+           /* let bardata = await this.$refs.canvas.createElement('Barcodematrix',
                 {imgText:'989874',
                  barlineWidth:500,
                  width:50,
@@ -592,7 +592,7 @@
                  left:0,
                  top:0,
                 id:9} );
-            console.warn('bardata',bardata)
+            console.warn('bardata',bardata)*/
 
             this.$refs.canvas.SetNewZoom(1,0,0);
 
@@ -870,6 +870,7 @@
                             top:40,
                             width:50,
                             height:50,
+                            barcodeType:1,
                             hasRotatingPoint:false,
                             imgText: '69012345679',
                             color:'#f00',

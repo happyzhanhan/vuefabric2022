@@ -3824,6 +3824,9 @@
                         return canvasObject;
                     case 'Qrcode':            //----------------------------------------------------------------------------------------二维码
                         options.imgText = options.imgText ? options.imgText : '123456789';
+                        if(options.barcodeType===0){
+
+                        }
                         canvasObject = await that.createQrcode(options);
                         resolve(canvasObject);
                         return canvasObject;
@@ -5091,66 +5094,169 @@
             let that = this;
             let canvas = this.canvas;
             return new Promise(function (resolve, reject) {
-                let canvasObject;
-                let qrcodeImg = jrQrcode.getQrBase64(options.imgText, {
-                    padding: options.margin ? options.margin : 2,   // 二维码四边空白（默认为10px）
-                    width: options.width ? options.width : 80,  // 二维码图片宽度（默认为256px）
-                    height: options.height ? options.height : 80,  // 二维码图片高度（默认为256px）
-                    correctLevel: QRErrorCorrectLevel.H,    // 二维码容错level（默认为高）
-                    reverse: false,        // 反色二维码，二维码颜色为上层容器的背景颜色
-                    background: options.background ? options.background : "#ffffff",    // 二维码背景颜色（默认白色）
-                    foreground: options.lineColor ? options.lineColor : "#000000"     // 二维码颜色（默认黑色）
-                });
-                let newimg = document.createElement('img');
-                newimg.src = qrcodeImg;
-                newimg.id = (new Date()).getTime();
+                if(options.barcodeType===1){
+                    let canvasObject;
+                    options.imgText = options.imgText ? options.imgText : '12345670';
 
-                newimg.onload = () => {
-                    canvasObject = new fabric.Image(newimg, {
-                        left: options.left,
-                        top: options.top,
-                        id: options.id,
-                        copyId: options.copyId,
-                        zIndex: options.zIndex ? options.zIndex : options.id,
-                        type: options.type ? options.type : '0',
-                        color: options.lineColor,
-
-                        name: options.name ? options.name : 'Qrcode',
-                        angle: options.angle,
-                        component: "component",
-                        isType: 'Qrcode',
-                        isDiff: 'static',
-                        fill: options.fill ? options.fill : '#000000',
-                        flipX: false,
-                        flipY: false,
-                        lockSkewingX: true,                  //禁掉按住shift时的变形
-                        lockSkewingY: true,
-                        originX: 'left',
-                        originY: 'top',
-                        lockUniScaling: true,
-                        imgText: options.imgText,
-                        content: options.imgText,
-
-                        lineColor: options.lineColor,
-                        hasRotatingPoint: false,                          //元素是否旋转
-
-                        visible: options.visible,
-                        eyeshow: options.eyeshow,
-                        screenIndex: options.screenIndex,
-
+                    var img = new Image();
+                    var svgNode =  DATAMatrix({
+                        msg :  options.imgText
+                        ,dim :   options.barlineWidth
+                        ,rct :   0
+                        ,pad :   0
+                        ,pal : [options.lineColor ? options.lineColor : "#000000", "#f2f4f8"]
+                        ,vrb :   0
                     });
-                    canvas.add(canvasObject);
-                    that.setActiveObject(canvasObject);
-                    that.setTop();                                         //遮罩置顶
-                    canvas.renderAll();
-                    /* that.activecanvaobjs.push(canvasObject);   //设置活跃元素
-                     that.activeobj = canvasObject;*/
-                    resolve(canvasObject);
-                };
-                newimg.onerror = function () {
-                    reject(new Error('qrcode error load!'));
-                };
+                    // img.src=svgNode
+                    // document.getElementById('datamatrixbox').append(svgNode)
 
+                    console.warn(svgNode)
+                    // img.src = 'data:image/svg+xml,' + btoa(unescape(encodeURIComponent(svgNode.innerHTML)));
+                    // console.warn(img)
+
+                    // 循环删除历史图片
+                    var el = document.getElementById('datamatrixbox');
+                    var childs = el.childNodes;
+                    for(var i = childs .length - 1; i >= 0; i--) {
+                        el.removeChild(childs[i]);
+                    }
+                    document.getElementById('datamatrixbox').append(svgNode)
+
+                    let curcanvas = canvas;
+                    html2canvas(document.getElementById('datamatrixbox')).then(function(canvas) {
+                        let url = canvas.toDataURL();
+                        console.log(url)
+
+                        let img = new Image();
+                        img.crossOrigin = 'Anonymous';
+                        img.src = url;
+
+                        img.onload = () => {
+
+                            console.log(img)
+
+                            document.getElementById('datamatrixbox').append(img)
+
+                            canvasObject = new fabric.Image(img, {
+                                left: options.left,
+                                top: options.top,
+                                id: options.id,
+
+                                // width: options.width,
+                                // height: options.height,
+                                // scaleX:1,
+                                // scaleY:1,
+
+                                scaleX: options.width / img.width,
+                                scaleY: options.height / img.height,
+
+
+                                copyId: options.copyId,
+                                zIndex: options.zIndex ? options.zIndex : options.id,
+                                type: options.type ? options.type : '0',
+                                color: options.lineColor,
+
+                                name: options.name ? options.name : 'Qrcode',
+                                angle: options.angle,
+                                component: "component",
+                                isType: 'Qrcode',
+                                isDiff: 'static',
+                                fill: options.fill ? options.fill : '#000000',
+                                flipX: false,
+                                flipY: false,
+                                lockSkewingX: true,                  //禁掉按住shift时的变形
+                                lockSkewingY: true,
+                                originX: 'left',
+                                originY: 'top',
+                                lockUniScaling: true,
+                                imgText: options.imgText,
+                                content: options.imgText,
+
+                                lineColor: options.lineColor,
+                                hasRotatingPoint: false,                          //元素是否旋转
+
+                                barcodeType:1,
+                                visible: options.visible !== false ? true : options.visible,                          //元素是否可见
+                                eyeshow: options.eyeshow,
+                                screenIndex: options.screenIndex,
+
+                            });
+
+                            console.log(canvasObject)
+                            curcanvas.add(canvasObject);
+                            that.setActiveObject(canvasObject);
+                            // that.setTop();                                         //遮罩置顶
+                            curcanvas.renderAll();
+
+
+                            resolve(canvasObject);
+                        }
+                        img.onerror = function () {
+                            reject(new Error('barcode error load!'));
+                        };
+                    });
+                }else{
+                    let canvasObject;
+                    let qrcodeImg = jrQrcode.getQrBase64(options.imgText, {
+                        padding: options.margin ? options.margin : 2,   // 二维码四边空白（默认为10px）
+                        width: options.width ? options.width : 80,  // 二维码图片宽度（默认为256px）
+                        height: options.height ? options.height : 80,  // 二维码图片高度（默认为256px）
+                        correctLevel: QRErrorCorrectLevel.H,    // 二维码容错level（默认为高）
+                        reverse: false,        // 反色二维码，二维码颜色为上层容器的背景颜色
+                        background: options.background ? options.background : "#ffffff",    // 二维码背景颜色（默认白色）
+                        foreground: options.lineColor ? options.lineColor : "#000000"     // 二维码颜色（默认黑色）
+                    });
+                    let newimg = document.createElement('img');
+                    newimg.src = qrcodeImg;
+                    newimg.id = (new Date()).getTime();
+
+                    newimg.onload = () => {
+                        canvasObject = new fabric.Image(newimg, {
+                            left: options.left,
+                            top: options.top,
+                            id: options.id,
+                            copyId: options.copyId,
+                            zIndex: options.zIndex ? options.zIndex : options.id,
+                            type: options.type ? options.type : '0',
+                            color: options.lineColor,
+
+                            name: options.name ? options.name : 'Qrcode',
+                            angle: options.angle,
+                            component: "component",
+                            isType: 'Qrcode',
+                            isDiff: 'static',
+                            fill: options.fill ? options.fill : '#000000',
+                            flipX: false,
+                            flipY: false,
+                            lockSkewingX: true,                  //禁掉按住shift时的变形
+                            lockSkewingY: true,
+                            originX: 'left',
+                            originY: 'top',
+                            lockUniScaling: true,
+                            imgText: options.imgText,
+                            content: options.imgText,
+
+                            lineColor: options.lineColor,
+                            hasRotatingPoint: false,                          //元素是否旋转
+
+                            barcodeType:0,
+                            visible: options.visible,
+                            eyeshow: options.eyeshow,
+                            screenIndex: options.screenIndex,
+
+                        });
+                        canvas.add(canvasObject);
+                        that.setActiveObject(canvasObject);
+                        that.setTop();                                         //遮罩置顶
+                        canvas.renderAll();
+                        /* that.activecanvaobjs.push(canvasObject);   //设置活跃元素
+                         that.activeobj = canvasObject;*/
+                        resolve(canvasObject);
+                    };
+                    newimg.onerror = function () {
+                        reject(new Error('qrcode error load!'));
+                    };
+                }
             });
         },
 

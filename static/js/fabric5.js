@@ -13732,6 +13732,8 @@ fabric.util.object.extend(fabric.StaticCanvas.prototype, /** @lends fabric.Stati
                     postfix:this.postfix,
                     content:this.content,
 
+                    barcodeType: this.barcodeType, //条码类型
+
                 };
 
 
