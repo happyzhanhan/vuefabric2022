@@ -1453,7 +1453,7 @@
             that.canvas.remove(...that.canvas.getObjects('sMask'));
             const pathOption = {
                 selectable: false,
-                fill: '#f1f1f1',
+                fill: '#f1f1f1',  //rgb(40,40,40)
                 hoverCursor: 'default',
                 evented: false,
                 excludeFromExport: true,
@@ -5134,7 +5134,7 @@
 
                         img.onload = () => {
 
-                            console.log(img)
+                            // console.log(img.width,img.height)
 
                             document.getElementById('datamatrixbox').append(img)
 
@@ -5182,8 +5182,8 @@
                                 screenIndex: options.screenIndex,
 
                             });
-
-                            console.log(canvasObject)
+                            canvasObject.height = canvasObject.width
+                            // console.log(canvasObject.width,canvasObject.height)
                             curcanvas.add(canvasObject);
                             that.setActiveObject(canvasObject);
                             // that.setTop();                                         //遮罩置顶
