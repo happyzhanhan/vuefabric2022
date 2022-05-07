@@ -4,7 +4,7 @@
       <div style="position: fixed; top: -9999999999999999999px; left:800px; z-index:999999;">
           <img id="barcode" />
           <div id="barbox"></div>
-          <div id="datamatrixbox"></div>
+          <div  style="position: fixed; top: -9999999999999999999px; left:800px; z-index:999999;" id="datamatix"></div>
           <img id="qrcode" :src="qrcodeImg" alt="" class="qrcodeImg">
       </div>
       <input type="text" id="code" style="position:fixed; top:-1000000px; z-index:9999;">
@@ -5109,22 +5109,22 @@
                         ,vrb :   0
                     });
                     // img.src=svgNode
-                    // document.getElementById('datamatrixbox').append(svgNode)
+                    // document.getElementById('datamatix').append(svgNode)
 
                     console.warn(svgNode)
                     // img.src = 'data:image/svg+xml,' + btoa(unescape(encodeURIComponent(svgNode.innerHTML)));
                     // console.warn(img)
 
                     // 循环删除历史图片
-                    var el = document.getElementById('datamatrixbox');
+                    var el = document.getElementById('datamatix');
                     var childs = el.childNodes;
                     for(var i = childs .length - 1; i >= 0; i--) {
                         el.removeChild(childs[i]);
                     }
-                    document.getElementById('datamatrixbox').append(svgNode)
+                    document.getElementById('datamatix').append(svgNode)
 
                     let curcanvas = canvas;
-                    html2canvas(document.getElementById('datamatrixbox')).then(function(canvas) {
+                    html2canvas(document.getElementById('datamatix')).then(function(canvas) {
                         let url = canvas.toDataURL();
                         console.log(url)
 
@@ -5136,7 +5136,7 @@
 
                             // console.log(img.width,img.height)
 
-                            document.getElementById('datamatrixbox').append(img)
+                            document.getElementById('datamatix').append(img)
 
                             canvasObject = new fabric.Image(img, {
                                 left: options.left,
@@ -5279,15 +5279,15 @@
                     ,vrb :   0
                 });
                 // img.src=svgNode
-                // document.getElementById('datamatrixbox').append(svgNode)
+                // document.getElementById('datamatix').append(svgNode)
 
                 console.warn(svgNode)
                 // img.src = 'data:image/svg+xml,' + btoa(unescape(encodeURIComponent(svgNode.innerHTML)));
                 // console.warn(img)
 
-                document.getElementById('datamatrixbox').append(svgNode)
+                document.getElementById('datamatix').append(svgNode)
 
-                html2canvas(document.getElementById('datamatrixbox')).then(function(canvas) {
+                html2canvas(document.getElementById('datamatix')).then(function(canvas) {
                     let url = canvas.toDataURL();
                     console.log(url)
 
@@ -5299,7 +5299,7 @@
 
                         console.log(img)
 
-                        document.getElementById('datamatrixbox').append(img)
+                        document.getElementById('datamatix').append(img)
 
                         canvasObject = new fabric.Image(img, {
                             left: options.left,
