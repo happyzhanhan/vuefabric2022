@@ -1,22 +1,22 @@
 {
-  "name": "vuefabric2020",
+  "name": "vuefabric2022",
   "version": "0.0.1",
   "author": "zhouzhenhan <3150967536@qq.com> (周振晗)",
-  "description": "vue fabric components",
+  "description": "vue2.0 use fabric.js 做图片模板制作",
   "keywords": [
     "vue-fabric",
     "fabric",
     "component",
     "vue"
   ],
-  "homepage": "https://github.com/zhouzhenhan/vuefabric2020",
+  "homepage": "https://github.com/happyzhanhan/vuefabric2022",
   "bugs": {
-    "url": "https://github.com/zhouzhenhan/vuefabric2020/issues"
+    "url": "https://github.com/happyzhanhan/vuefabric2022/issues"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/purestart/vue-fabric.git"
+    "url": "git+https://github.com/happyzhanhan/vuefabric2022.git"
   },
   "private": false,
   "main": "dist/vue-fabric.min.js",
