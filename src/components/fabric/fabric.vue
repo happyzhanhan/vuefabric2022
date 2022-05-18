@@ -8,6 +8,7 @@
           <img id="qrcode" :src="qrcodeImg" alt="" class="qrcodeImg">
       </div>
       <input type="text" id="code" style="position:fixed; top:-1000000px; z-index:9999;">
+
       <canvas id="canvas" width="800" height="400"></canvas>  <!-- :width="width>boxWidth?width:boxWidth" :height="height>boxHeight?height:boxHeight"-->
 
       <!--鼠标右键-->
@@ -291,6 +292,7 @@
     mounted() {
       this.canvas = new fabric.Canvas('canvas', { preserveObjectStacking: true });
       let canvas = this.canvas;
+        initAligningGuidelines(canvas)
       let that = this;
       fabric.Canvas.prototype.rotationCursor = "url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABsAAAAbCAYAAACN1PRVAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyFpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDE0IDc5LjE1MTQ4MSwgMjAxMy8wMy8xMy0xMjowOToxNSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIChXaW5kb3dzKSIgeG1wTU06SW5zdGFuY2VJRD0ieG1wLmlpZDo5NzBBQTBGQ0Y4ODcxMUVBQURGNkU5NzQ3OUY4RTA5NiIgeG1wTU06RG9jdW1lbnRJRD0ieG1wLmRpZDo5NzBBQTBGREY4ODcxMUVBQURGNkU5NzQ3OUY4RTA5NiI+IDx4bXBNTTpEZXJpdmVkRnJvbSBzdFJlZjppbnN0YW5jZUlEPSJ4bXAuaWlkOjk3MEFBMEZBRjg4NzExRUFBREY2RTk3NDc5RjhFMDk2IiBzdFJlZjpkb2N1bWVudElEPSJ4bXAuZGlkOjk3MEFBMEZCRjg4NzExRUFBREY2RTk3NDc5RjhFMDk2Ii8+IDwvcmRmOkRlc2NyaXB0aW9uPiA8L3JkZjpSREY+IDwveDp4bXBtZXRhPiA8P3hwYWNrZXQgZW5kPSJyIj8+QUJwRwAAAytJREFUeNrsVk1oGkEUXqVIqCRIhVICEsSTkFuwEPDaWiQ9NaQx6VGRaqCHQATBEFMKKUoLos0h4LV4aWxCbyqhEbx4CJJCwJMJRKVWxJ/EkJ/X9yabZd2oay+hhX7wsbPz3sybmTfv21UAAHdXUHJ3iL8rmEKh0CHdyASyhAQRC8gQ0izyNyCD9Lw1GeWsFxFvdDoduN1uSCQSUCqVQIxCoQChUAjMZjM5B5DTw8PDEAwG6f3Trfl6BFEgQzMzM3BwcAByaDabYLPZYHR0FJLJJOu73sdgwd65XC44Pz8XJjw+PoZYLAZ+vx+8Xi/b6enpqWBvtVqwu7vL2u12myZpywZDOCcnJ6FarbKBV1dXEI1GwWg0gkqlIgc/0qtWq2FiYgI2NjagVqt17LRer5NfvW8wxH0E7O3tCQMXFxfJEEWakCqRrxr5lBaQyWQ6gjUaDXJoyAV7gYDLy0s2iJJPiaZFdDmBRyMjI7C5udk1h2hvygX7jGADTk5OgG4i9hlFditym6ef8tcL3S7IPUklPEawRjqd5orFIjXzfP08M5lM35aXl5l9dXV1amtri8tms5xU8s7Ozuix3rfOEL8QbGWBQIDVjsj2FSGsnNrUh3yOnJLwSbdbLt3ZT8QDxM2uiiIbXR7xC8fncpvf+cOhoaGywWDgsNjpfRxtP/rJVZEPwlFAeohs67hbLpVKMVJbclSvPR4Pt7+/z62trbF3uWP8gmDHdHh4CBqNhjo1Ivs0MslzWtSvo8uEC2VjMd/UmZa7ja8QcHFxwQYtLS1R50cZ/SRpC66srAj59Pl8ZPANoiDfEYLszM3NUecHpFbiRykYR0ZI2kiuCEdHR6DX68lBP0gwm8ViYZJDIP1bWFgArVZ7o+x2pEupVMLY2BhEIhEmaQQSg/n5efLzdj2FHkfzfnZ2FiqVinA0+XyelYPdbgfaCWliuVzuUA2n00mDwz2PvE8u3mKBQzwel/3E7OzsAJ2GuC7/KBgf0IKMW61WCIfDkMvlmMiiQrCvApYAOBwO9tVGv5f95pINJtHEMDJHak6KhKwiU0gH3chB5lH8/5X754L9FmAAxKqp09gZRrsAAAAASUVORK5CYII=) 12 12, auto";
 
@@ -503,13 +505,9 @@
         that.$emit('mouse:up', options);
       });
       this.canvas.on('mouse:move', function (e) {
-        //  console.log(e.e.movementX, e.e.movementY)
           if (that.isMoveing && this.panning && e && e.e) {
               var delta = new fabric.Point(e.e.movementX, e.e.movementY);
-            //  console.log(delta);
               canvas.relativePan(delta);
-
-
           }
         that.$emit('mouse:move', e);
       });
@@ -1108,10 +1106,6 @@
                     });
                 }
 
-
-
-
-
                 options.target.group.item(1).evented = false;
                 options.target.group.item(1).selectable = false;
                 options.target.group.selectable = true;
@@ -1205,7 +1199,8 @@
             objects.forEach((one) => {
                 if (one.type === 'sBg') {
                     // console.log(one)
-                    one.setlefttop();
+                    // one.setlefttop();
+
                 }
             });
             this.canvas.setWidth(w);
@@ -1547,6 +1542,19 @@
                     },'ALL'); //画尺子
                 },500)
             }*/
+            this.canvas.remove(...this.canvas.getObjects('sRuler')); //删除已有的标尺
+            setTimeout(()=>{
+                that.drawRulerInit({
+                    axisWidth:1,
+                    lineColor:'#1676FF',
+                    gridWidth:30,
+                    gridHeight:20,
+                    left:bg.left,
+                    top:bg.top,
+                    width:options.width,
+                    height:options.height,
+                },'ALL'); //画尺子
+            },500)
 
 
         },
@@ -1627,7 +1635,7 @@
                     originY:'top',
                     left:50*i+5,
                     top:params.gridHeight *0.01 ,
-                    fill:'#666',
+                    fill:params.lineColor,
                     strokeWidth:0.3,
                     fontSize:12,
                 });
@@ -1700,7 +1708,7 @@
                         originY:'top',
                         left:params.gridWidth*0.01,
                         top:j*12+(50*i+5),
-                        fill:'#666',
+                        fill:params.lineColor,
                         strokeWidth:0.3,
                         fontSize:12,
                         width:12,

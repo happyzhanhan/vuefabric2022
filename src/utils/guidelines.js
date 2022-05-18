@@ -4,7 +4,7 @@ function initAligningGuidelines(canvas) {
         aligningLineOffset = 5,
         aligningLineMargin = 5,
         aligningLineWidth = 1,
-        aligningLineColor = 'rgb(0,98,178,0.6)',
+        aligningLineColor = '#f00',//'rgb(0,98,178,0.6)',
         viewportTransform,
         zoom = 1;
 

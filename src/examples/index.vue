@@ -282,7 +282,7 @@
 
             </div>
             <!--X轴-->
-            <div class="xZhou" id="xZhou" :style="'width:'+(boxWidth-18)+'px;'" v-if="zoom===1">
+            <div class="xZhou" v-if="showRuler[0]" id="xZhou" :style="'width:'+(boxWidth-18)+'px;'" >
                 <div class="x-line"
                      :style="'width: '+(boxWidth-18-translateX)+'px;transform-origin:0 0; transform:scaleX('+zoom+') translateX('+ translateX +'px) ; '">  <!---->
                     <span class="number" v-for="(item,index) in xScale"
@@ -293,7 +293,7 @@
             </div>
 
             <!--Y轴-->
-            <div class="yZhou" id="yZhou" :style="'height: '+ (boxHeight-18) +'px; '" v-if="zoom===1">
+            <div class="yZhou" v-if="showRuler[1]" id="yZhou" :style="'height: '+ (boxHeight-18) +'px; '" >
                 <div class="y-line"  :style="'height: '+(boxHeight-18-translateY)+'px;　transform:translateY('+ translateY +'px) scaleY('+zoom+') ;'">
                     <span  class="number" v-for="(item,index) in yScale"
                            :key="index"
@@ -436,8 +436,8 @@
                 xLeft:-18,
                 yTop:-18,
 
-                showRuler: [true, true],  //横纵标尺是否显示
-                showR:true,
+                showRuler: [false, false],  //横纵标尺是否显示
+                showR:false,
 
                 open9:false,
                 hover9index:0,
