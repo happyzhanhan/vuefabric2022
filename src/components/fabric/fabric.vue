@@ -3058,7 +3058,6 @@
         setTop() {
             let objects = this.canvas.getObjects();
             objects.forEach((obj) => {
-                //console.log(obj.zIndex);
                 if (obj.type == 'sMask') {
                     // console.log('遮罩置顶')
                     obj.zIndex = -1;
@@ -5441,7 +5440,6 @@
                         color: options.color ? options.color : "#000000",
                         height: options.height,
                         name: options.name ? options.name : 'barcodeimg',
-                        angle: options.angle,
                         component: "component",
                         isType: 'barcodeimg',
                         isDiff: 'static',
@@ -5479,7 +5477,6 @@
                         copyId: options.copyId,
 
                         name: options.name ? options.name : 'barcodebg',
-                        angle: options.angle,
                         component: "component",
                         isType: 'barcodebg',
                         isDiff: 'static',
@@ -5505,7 +5502,6 @@
 
                         name: options.name ? options.name : 'Barcode',
 
-                        angle: options.angle,
                         component: "component",
                         isType: 'Barcode',
                         isDiff: 'static',
@@ -5578,6 +5574,9 @@
                     /*that.activecanvaobjs.push(canvasObject);   //设置活跃元素
                     that.activeobj = canvasObject;*/
                     that.changeBarcodeImage(canvasObject); //改变一下试试
+                    canvasObject.set({
+                        angle: options.angle,
+                    })
                     resolve(canvasObject);
 
                 }
