@@ -1,0 +1,1333 @@
+(function(global) {
+
+    'use strict';
+
+    var fabric = global.fabric || (global.fabric = {});
+
+    fabric.RectWithText = fabric.util.createClass(fabric.Rect, {
+        type: 'rectWithText',
+        text: null,
+        textOffsetLeft: 0,
+        textOffsetTop: 0,
+        _prevObjectStacking: null,
+        _prevAngle: 0,
+        _wordJoiners:'b',
+
+
+
+         recalcTextPosition:async function () {
+             const rectLeftTop = this.getPointByOrigin('left', 'top');
+             const sin = Math.sin(fabric.util.degreesToRadians(this.angle));
+             const cos = Math.cos(fabric.util.degreesToRadians(this.angle));
+             const newTop = sin * this.textOffsetLeft + cos * this.textOffsetTop;
+             const newLeft = cos * this.textOffsetLeft - sin * this.textOffsetTop;
+
+            if(this.text.isElasticSize!==2){
+
+                this.text.set('left', rectLeftTop.x + newTop +this.text.xLeft);
+
+                this.text.set('top', rectLeftTop.y +newLeft + this.text.yTop );
+                this.text.set('width', parseInt(this.width*this.scaleX - this.text.xLeft - this.text.xRight));
+                this.text.set('height', parseInt(this.height*this.scaleY  - this.text.yTop - this.text.yBot));
+
+
+            }
+
+            if(this.text.isElasticSize===2){
+
+               // console.log('校准位置：',this.text.offsetLeft,this.text.offsetTop);
+
+                this.text.set('left', rectLeftTop.x + newTop +this.text.xLeft - this.text.offsetLeft );
+                this.text.set('top', rectLeftTop.y + newLeft + this.text.yTop - this.text.offsetTop );
+
+            }
+
+
+
+
+        },
+
+
+        recalcTextPosition2: function (h) {
+            this.text.clipTo = function(ctx) {
+                if(ctx){
+                    let height = parseInt(h - this.yTop - this.yBot );
+                    //console.log('hhh',height,this.height,h);
+                    ctx.rect(-this.width/2,-this.height/2,this.width,height);
+                }
+            }
+
+        },
+
+        //文本不使用 的文本
+        textStyleFormat:function(target,text){
+            //console.log(target.maxLines,target.omitStyleText,target.newline);
+
+            if(!target.maxLines){
+                return target.text;
+            }
+            if(!target.omitStyleText){
+                return target.text;
+            }
+
+            let linewords = text?text:target.textdemo;
+            let wordJoiners = /[\n\t\r]/;
+            //console.warn('linewords*******************1',linewords);
+            let lines = linewords.split(wordJoiners);     //先按照回车符等分隔多行
+            let newtext  = linewords;
+
+            if(target.newline!==''){
+
+                if(target.newline && target.newline!==''){   //换行符 newline
+                    let newwordJoiners = target.newline;
+                    lines.forEach((line,i)=>{
+                        if(line.indexOf(newwordJoiners)!==-1){   //如果遇到填写的分隔符
+                            let moreline = line.split(newwordJoiners);
+                            lines.splice(i,1);
+                            lines.splice(i,0,...moreline);
+                        }
+                    });
+                    newtext = '';
+                    for(var i=0;i<lines.length;i++){
+                        if(i===lines.length-1){
+                            newtext = newtext + lines[i] ;
+                        }else{
+                            newtext = newtext + lines[i] + '\n';
+                        }
+
+                    }
+                }
+            }
+
+            let widthlines = target._splitTextIntoLines(newtext).lines; //根据宽度切割行
+            for(var j =0;j<widthlines.length;j++){
+                if(widthlines[j]===''){
+                    widthlines.splice(j,1);
+                }
+            }
+            //console.log(widthlines);
+
+            if(target.maxLines && widthlines.length>target.maxLines){ //最大行数 maxLines
+                //console.log('符合最大行数限制',target.maxLines);
+                newtext = '';
+                for(var i=0;i<target.maxLines;i++){
+                    if(i===target.maxLines-1){
+                        newtext = newtext + widthlines[i] ; //重新组装显示行
+                    }else{
+                        newtext = newtext + widthlines[i] + '\n'; //重新组装显示行
+                    }
+
+                }
+                if(target.omitStyleText!=='无'){ //超出替换 omitStyle
+                    newtext = newtext.substring(0, newtext.length - 1) + target.omitStyleText;  //.substring(0, newtext.length - 3)
+                    target.selectionEnd = target.selectionStart = newtext.length;
+                }else{
+                    target.selectionEnd = target.selectionStart = newtext.length;
+                }
+            }
+
+           // console.log(newtext);
+            return newtext;
+
+        },
+
+        /**
+         * 根据字，字体，字号画图，计算边距变形整体缩放
+         *
+         *
+         * */
+        getFontImgdata(text,fontFamily,fontSize,scaleX,scaleY,fontstyle){
+           // console.log(text,fontFamily,fontSize,scaleX,scaleY);
+            /* console.warn('getFontImgdata....');*/
+
+            let newzoom =  window.devicePixelRatio;
+
+            let screenzoom = this.detectZoom()/100;
+
+           // console.log('画图:',newzoom,screenzoom)
+
+            let that = this;
+            let result =  new Promise(function(resolve,reject){
+                let ncanvas = new fabric.Canvas('fontcanvas', { preserveObjectStacking: true });
+
+
+                //document.getElementById('fontcanvas').style.zoom = newzoom;
+
+               // ncanvas.setZoom(newzoom);
+                /* fabric.Object.prototype.originX = 'left';  //设置中心为左上角
+                 fabric.Object.prototype.originY = 'top';*/
+
+                let textdaemo = new fabric.IText(text, {
+                    fill:'#ff0',
+                    splitByGrapheme: true,
+                    lockScalingFlip:true,
+                    fontFamily:fontFamily,
+                    fontSize:fontSize,
+
+                    width:2000,
+                    height:1000,
+                    lineHeight:100,
+
+                    fontWeight:fontstyle.fontWeight?fontstyle.fontWeight:'normal',
+                    linethrough:fontstyle.linethrough?fontstyle.linethrough:false,
+                    underline:fontstyle.underline?fontstyle.underline:false,
+                    fontStyle:fontstyle.fontStyle?fontstyle.fontStyle:'normal',
+
+                    originX:'left',
+                    originY:'top',
+                    scaleX:scaleX,
+                    scaleY:scaleY,
+                });
+
+
+                /*const rect1 = new fabric.Rect({
+                    lockScalingFlip:true,
+                });
+                const text1 = new fabric.Text(text, {
+                    fill:'#ff0',
+                    splitByGrapheme: true,
+                    lockScalingFlip:true,
+                    fontFamily:fontFamily,
+                    fontSize:fontSize,
+
+                    scaleX:scaleX,
+                    scaleY:scaleY,
+
+                });
+                let textdaemo = new fabric.Group([rect1,text1], {
+                    width:text1.width,
+                    height:text1.height,
+                    originX:'left',
+                    originY:'top',
+                    flipX: false,
+                    flipY: false,
+                    lockSkewingX: true,                  //禁掉按住shift时的变形
+                    lockSkewingY:true,
+                    lockUniScaling:true,
+                    id:0,
+                    left: 0,
+                    top: 0,
+                    angle:0,
+                    isElasticSize:1,
+
+
+
+                    clipTo:function(ctx) {
+                        ctx.rect(-text1.width*scaleX/2,-text1.height*scaleY/2,text1.width*scaleX,text1.height*scaleY);
+                    }
+                });
+                textdaemo.item(0).set({'width':text1.width*scaleX, 'height':textdaemo.height*scaleY,});
+                textdaemo.item(1).set({'width':text1.width, 'height':text1.height,});*/
+
+                ncanvas.setWidth(textdaemo.width*scaleX);
+                ncanvas.setHeight(textdaemo.height*scaleY);
+
+
+                ncanvas.backgroundColor ='#000';
+
+
+                textdaemo.set({
+                    left : 0,
+                    top : 0,
+                });
+
+               // console.log(textdaemo.measureLine(0),textdaemo.getHeightOfChar(0));
+
+                textdaemo.setCoords();
+
+                ncanvas.add(textdaemo);
+                ncanvas.requestRenderAll();
+                ncanvas.renderAll();
+
+                let ctxcontent = ncanvas.getContext("2d");
+
+
+
+
+               /* var ctxa = ncanvas.getContext("2d");
+                ctxa.font="30px 微软雅黑";
+                let tex = ctxa.fillText('1',700,400);
+                console.log('ctxactxactxactxactxa',ctxa.getImageData(0,0,700,400).data);*/
+
+               let canvadata = ctxcontent.getImageData(0,0,textdaemo.width*scaleX,textdaemo.height*scaleY+10);
+                var data = canvadata.data;
+                let morew = canvadata.width;
+                let moreh = canvadata.height;
+
+                let coor = [];
+                let fontw = [];
+                let fonth = [];
+                for(let j =0;j<2;j++){
+                    coor[j] = [];
+                }
+                let realdata = [];
+                for(let i=0,len=data.length;i<len;i+=4){
+                    let red = data[i],
+                        green=data[i+1],
+                        blue=data[i+2],
+                        alpha= data[i+3];
+                    if(`${red} ${green} ${blue}` === '0 0 0'){
+                        realdata.push(0);
+                    }else{
+                        realdata.push(1);
+                    }
+                }
+
+                //计算二维图像
+                let lines = [];
+                for(var l=0;l<realdata.length;l+=morew){
+                    lines[l/morew]=[];
+                    for(var m=0;m<morew;m++){
+                        lines[l/morew][m] = realdata[l+m];
+                        if( realdata[l+m]===1){
+                            fonth.push(parseInt(l/morew));
+                            fontw.push(m)
+                        }
+                    }
+                }
+                //生成base64图像
+                let dataUrl = ncanvas.toDataURL({
+                    format: 'jpeg',
+                    multiplier:1,
+                });
+                // console.log(dataUrl,screen.deviceXDPI);
+
+                //计算宽高
+                //console.log(fontw,fonth,morew,moreh);
+
+                let w = new Set(fontw);
+                let neww = Array.from(w); //去重
+                let neww2 = neww.sort(function(a,b){return a-b;}); //从小到大排列
+                let truefontwidth =neww2[neww2.length-1]-neww2[0]+1;
+
+                let h = new Set(fonth);
+                let newh = Array.from(h);//去重
+                let newh2 = newh.sort(function(a,b){return a-b;}); //从小到大排列
+                let truefontheight =newh2[newh2.length-1]-newh2[0]+1;
+
+                let returndata = {
+                    offset:[neww2[0]-0, morew-neww2[neww2.length-1]-1, newh2[0]-0, moreh-newh2[newh2.length-1]-1 ], //[左，右，上，下]
+                    fontTruewidth:truefontwidth,
+                    fontTrueheight:truefontheight,
+                    fontSize:fontSize,
+                    width:morew,
+                    height:moreh,
+                    url:dataUrl,
+                    lines:lines,
+                    text:text,
+                    fontFamily:fontFamily,
+                    scaleX:scaleX,
+                    scaleY:scaleY,
+                };
+                let img = new Image();
+                img.src = dataUrl;
+                img.onload = () => {resolve(returndata)};
+            });
+
+            return result;
+
+
+        },
+
+        //获取电脑分辨率
+        detectZoom (){
+            var ratio = 0,
+                screen = window.screen,
+                ua = navigator.userAgent.toLowerCase();
+
+            if (window.devicePixelRatio !== undefined) {
+                ratio = window.devicePixelRatio;
+            }
+            else if (~ua.indexOf('msie')) {
+                if (screen.deviceXDPI && screen.logicalXDPI) {
+                    ratio = screen.deviceXDPI / screen.logicalXDPI;
+                }
+            }
+            else if (window.outerWidth !== undefined && window.innerWidth !== undefined) {
+                ratio = window.outerWidth / window.innerWidth;
+            }
+            if (ratio){
+                ratio = Math.round(ratio * 100);
+            }
+            return ratio;
+        },
+
+        //递归出最佳缩放比横向
+        async factoriaX(w,h,sX,sY,textOptions,zoom){
+            let data2 = await this.getFontImgdata(textOptions.textdemo,textOptions.fontFamily,textOptions.fontSize,
+                sX,sY,{
+                    fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                    linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                    underline:textOptions.underline?textOptions.underline:false,
+                    fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+                });
+
+            if(data2.fontTrueheight<(w+2)*zoom){
+               return {
+                   scaleY:sY,
+                   data:data2,
+               };
+            }else{
+                sY = sY - 0.1;
+                return this.factoriaX(w,h,sX,sY,textOptions,zoom);
+            }
+        },
+
+
+        //根据字图上面间距定位文字
+        async isGetfontheitgh(textOptions){
+            let screenzoom = this.detectZoom()/100;
+            //console.log(textOptions);
+            let data = await this.getFontImgdata(textOptions.textdemo,textOptions.fontFamily,textOptions.fontSize,1,1,{
+                fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                underline:textOptions.underline?textOptions.underline:false,
+                fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+            });
+          //  console.warn('init',data);
+
+          //  console.warn('分辨率:',screenzoom,window.devicePixelRatio);
+           // document.body.style.zoom =1/ window.devicePixelRatio;
+           // document.getElementById('canvas').style.zoom = 1/screenzoom;
+           // console.log(this.width,this.height,textOptions.width,textOptions.height);
+
+            let measure = this.getMeasureText(textOptions.textdemo,textOptions);
+            console.log('measure',measure);
+            let longer = 0;
+            let factors = screenzoom;
+            if(measure.actualBoundingBoxDescent>20){
+                longer = 1;
+                factors = factors*0.98
+                //console.log('|jg_');
+            }else if(measure.actualBoundingBoxDescent<20 && measure.actualBoundingBoxDescent>2){
+                longer = 2;
+                factors = factors*1
+                //console.log('中国字');
+            }else if(measure.actualBoundingBoxDescent===2){
+                longer = 3;
+                factors = factors*1
+                //console.log('0123456789');
+            }else{
+                longer = 0;
+                factors = factors*1.02
+                //console.log('auoemn+-AB0');
+            }
+           // console.log('longer',longer);
+
+            let newscaleX = (textOptions.width*screenzoom*0.98)/data.fontTruewidth;
+            let newscaleY = (textOptions.height*factors)/data.fontTrueheight;
+
+            if(screenzoom===1){
+
+                newscaleY = this.height/data.fontTrueheight;
+
+            }else if(screenzoom===1.25){
+
+                if(longer===1){
+                    newscaleY = this.height*1.243/data.fontTrueheight;
+                }else if(longer===2){
+                    newscaleY = this.height*1.246/data.fontTrueheight;
+                }else if(longer===3){
+                    newscaleY = this.height*1.246/data.fontTrueheight;
+                }else if(longer===0){
+                    newscaleY = this.height*1.269/data.fontTrueheight;
+                }
+                newscaleX = (textOptions.width)/data.fontTruewidth;
+
+            }else if(screenzoom===1.5){
+
+                if(longer===1){
+                    newscaleY = this.height*1.135/data.fontTrueheight;
+                }else if(longer===2){
+                    newscaleY = this.height*1.171/data.fontTrueheight;
+                }else if(longer===3){
+                    newscaleY = this.height*1.171/data.fontTrueheight;
+                }else if(longer===0){
+                    newscaleY = this.height*1.456/data.fontTrueheight;
+                }
+                newscaleX = (textOptions.width)/data.fontTruewidth;
+               // newscaleY = (textOptions.height*factors)/data.fontTrueheight;
+
+            }else if(screenzoom===1.75){
+                if(longer===1){
+                    newscaleY = this.height*1.008/data.fontTrueheight;
+                }else if(longer===2){
+                    newscaleY = this.height*1.188/data.fontTrueheight;
+                }else if(longer===3){
+                    newscaleY = this.height*1.296/data.fontTrueheight;
+                }else if(longer===0){
+                    newscaleY = this.height*1.125/data.fontTrueheight;
+                }
+                newscaleX = (textOptions.width)/data.fontTruewidth;
+               // newscaleY = (textOptions.height*factors)/data.fontTrueheight;
+
+            }else if(screenzoom===2){
+
+                /*if(longer===1){
+                    newscaleY = this.height*1.246/data.fontTrueheight;
+                }else if(longer===2){
+                    newscaleY = this.height*1.292/data.fontTrueheight;
+                }else if(longer===3){
+                    newscaleY = this.height*1.358/data.fontTrueheight;
+                }else if(longer===0){
+                    newscaleY = this.height*1.406/data.fontTrueheight;
+                }*/
+
+                newscaleX = (textOptions.width*factors*0.98)/data.fontTruewidth;
+                newscaleY = (textOptions.height*factors*0.98)/data.fontTrueheight;
+
+            }else{
+
+                console.log('未知分辨率');
+                newscaleX = (textOptions.width*screenzoom)/data.fontTruewidth;
+                newscaleY = (textOptions.height*factors)/data.fontTrueheight;
+            }
+
+
+            let data2 = await this.getFontImgdata(textOptions.textdemo,textOptions.fontFamily,textOptions.fontSize,
+                newscaleX,newscaleY,{
+                fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                underline:textOptions.underline?textOptions.underline:false,
+                fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+            });
+            //console.log('isOK',data2);
+
+            /*if(data2.fontTrueheight>(textOptions.height+2)*screenzoom){
+                console.log('高度高了重新计算',data2.fontTrueheight,(textOptions.height+2)*screenzoom);
+                let returndata = await this.factoriaX(textOptions.width,textOptions.height,newscaleX,newscaleY-0.01,textOptions,screenzoom);
+               // console.log('returndata-递归结果：',returndata);
+                newscaleY = returndata.scaleY;
+            }*/
+
+            this.text.set('scaleX', newscaleX);
+            this.text.set('scaleY', newscaleY);
+
+            return {scaleX:newscaleX,scaleY:newscaleY}
+
+
+        },
+        //计算变形后数据上方和左右 空隙
+       async getLeftTopMargin(textOptions,newscaleX,newscaleY){
+           let screenzoom = this.detectZoom()/100;
+
+            let data2 = await this.getFontImgdata(textOptions.textdemo,textOptions.fontFamily,textOptions.fontSize,
+                newscaleX,newscaleY,{
+                    fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                    linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                    underline:textOptions.underline?textOptions.underline:false,
+                    fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+                });
+           // console.warn('计算margin',data2, data2.url);
+
+           let marginLeft = data2.offset[0]/screenzoom + (data2.fontTruewidth - textOptions.width*screenzoom)/2;
+           let marginTop = data2.offset[2]/screenzoom  + (data2.fontTrueheight - textOptions.height*screenzoom)/2;
+           if(screenzoom===1){
+               marginLeft = data2.offset[0]/1 + (data2.fontTruewidth - textOptions.width*1)/2;
+               marginTop = data2.offset[2]/1  + (data2.fontTrueheight - textOptions.height*1)/2;
+           }else if(screenzoom===1.25){
+               marginLeft = data2.offset[0]/1.25 ; //+ (data2.fontTruewidth - textOptions.width)/2
+               marginTop = data2.offset[2]/1.25  ;//+ (data2.fontTrueheight - textOptions.height*1)/2;
+           }else if(screenzoom===2){
+               marginLeft = data2.offset[0]/2;
+               marginTop = data2.offset[2]/2  ;
+           }else{
+               marginLeft = data2.offset[0]/screenzoom ;
+               marginTop = data2.offset[2]/screenzoom  ;
+           }
+
+
+            return {marginLeft:marginLeft,marginTop:marginTop,offset:data2.offset}
+
+        },
+
+        //计算基线以下是否有值
+        getMeasureText(text, textOptions){
+
+            let fontStyle = 100+'px' +' '+ textOptions.fontFamily; //textOptions.fontSize
+
+            var canvas = document.createElement('canvas');
+            var context = canvas.getContext('2d');
+            context.font = fontStyle ; // 设置字体样式，italic bold 20px 微软雅黑 || "italic bold 20px 微软雅黑"
+            var dimension = context.measureText(text);
+            return dimension;
+        },
+
+        //测量文字真实宽度
+        getTextWith(text, fontStyle,textstyle) {
+            //console.log(text,fontStyle,"100px 微软雅黑",fontStyle=="100px 微软雅黑");
+
+            var canvas = document.createElement('canvas')
+            var context = canvas.getContext('2d')
+            context.font = fontStyle ; // 设置字体样式，italic bold 20px 微软雅黑 || "italic bold 20px 微软雅黑"
+            var dimension = context.measureText(text);
+            var returnwh = this.measureText(textstyle.fontSize,textstyle.fontFamily,text);
+
+            return {w:dimension.width,h:returnwh.h};
+        },
+
+        //测量文字真实高度
+        measureText(fontSize, fontFamily, text) {
+            var span = document.createElement("span");
+            var result = {
+                width: 0,
+                height: 0
+            };
+            span.style.visibility = "hidden";
+            span.style.fontSize = fontSize+'px';//文字大小
+            span.style.fontFamily = fontFamily;//字体
+            span.style.display = "inline-block";
+            document.body.appendChild(span);
+            if (typeof span.textContent != "undefined") {
+                span.textContent = text;
+            } else {
+                span.innerText = text;
+            }
+            //使用window.getComputedStyle方法获取
+            let returnwh = {
+                w:parseFloat(window.getComputedStyle(span).width),
+                h:parseFloat(window.getComputedStyle(span).height),
+            }
+            console.log(returnwh);
+
+            /*result.width = parseFloat(window.getComputedStyle(span).width) - span.offsetWidth;
+            result.height = parseFloat(window.getComputedStyle(span).height) - span.offsetHeight;*/
+            return returnwh;
+        },
+
+
+        //根据文字测量计算变换
+        async isGetfontscale(text,textOptions){
+            let fontstyle = textOptions.fontSize+'px' +' '+ textOptions.fontFamily;
+            let measure = this.getTextWith(text,fontstyle,textOptions);
+            console.log(measure,this.width,this.height);
+
+           let newscaleX = this.width/measure.w;
+           let newscaleY = this.height/measure.h;
+
+           /* let data = await this.getFontImgdata(textOptions.textdemo,textOptions.fontFamily,textOptions.fontSize,
+                newscaleX,1,{
+                    fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                    linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                    underline:textOptions.underline?textOptions.underline:false,
+                    fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+                });
+
+            console.warn(data);*/
+
+            /*let data2 = await this.getFontImgdata(textOptions.textdemo,textOptions.fontFamily,textOptions.fontSize,
+                1,newscaleY,{
+                    fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                    linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                    underline:textOptions.underline?textOptions.underline:false,
+                    fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+                });
+            console.warn(data2);*/
+
+            let data3 = await this.getFontImgdata(textOptions.textdemo,textOptions.fontFamily,textOptions.fontSize,
+                newscaleX,newscaleY,{
+                    fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                    linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                    underline:textOptions.underline?textOptions.underline:false,
+                    fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+                });
+           // console.warn(data3);
+
+
+            let data4 = await this.getFontImgdata(textOptions.textdemo,textOptions.fontFamily,textOptions.fontSize,
+                1,1,{
+                    fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                    linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                    underline:textOptions.underline?textOptions.underline:false,
+                    fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+                });
+
+           // console.warn(data4);
+        },
+
+
+        //根据文字和浏览器缩放修改返回最佳缩放比
+        async getTrueZoom(options){
+            //console.log('optiosn---------',options)
+            let newzoom =  window.devicePixelRatio;
+
+            let screenzoom = (this.detectZoom()/100)>1?(this.detectZoom()/100):1;
+
+           // console.log('画图1:',newzoom,screenzoom,this.detectZoom()/100)
+
+            let that = this;
+            let result =  new Promise(function(resolve,reject){
+
+                let ncanvas = new fabric.Canvas('fontcanvas2', { preserveObjectStacking: true });
+
+               // ncanvas.id = 'fontcanvas2';
+                //screenzoom = 1;
+                let zoom = 4;
+                ncanvas.cacheCanvasEl.style.transform = 'scale('+zoom+')';
+                ncanvas.cacheCanvasEl.id = 'fontcanvas2';
+               // console.log(ncanvas.cacheCanvasEl,'0000000000');
+                //document.getElementById('fontcanvas2').style.zoom = 1;
+                // ncanvas.setZoom(10);
+                /* fabric.Object.prototype.originX = 'left';  //设置中心为左上角
+                 fabric.Object.prototype.originY = 'top';*/
+
+                let textdaemo = new fabric.IText(options.textdemo, {
+                    fill:'#ff0',
+                    splitByGrapheme: true,
+                    lockScalingFlip:true,
+                    fontFamily:options.fontFamily,
+                    fontSize:options.fontSize,
+
+                    width:2000,
+                    height:1000,
+                    lineHeight:100,
+
+                    fontWeight:options.fontWeight?options.fontWeight:'normal',
+                    linethrough:options.linethrough?options.linethrough:false,
+                    underline:options.underline?options.underline:false,
+                    fontStyle:options.fontStyle?options.fontStyle:'normal',
+
+                    originX:'left',
+                    originY:'top',
+                    scaleX:zoom,
+                    scaleY:zoom,
+                });
+
+                ncanvas.setWidth(textdaemo.width *screenzoom * zoom);
+                ncanvas.setHeight(textdaemo.height *screenzoom * zoom);
+
+
+                ncanvas.backgroundColor ='#000';
+
+
+                textdaemo.set({
+                    left : 0,
+                    top : 0,
+                });
+
+                // console.log(textdaemo.measureLine(0),textdaemo.getHeightOfChar(0));
+
+                textdaemo.setCoords();
+
+                ncanvas.add(textdaemo);
+                ncanvas.requestRenderAll();
+                ncanvas.renderAll();
+
+                let ctxcontent = ncanvas.getContext("2d");
+
+
+                /* var ctxa = ncanvas.getContext("2d");
+                 ctxa.font="30px 微软雅黑";
+                 let tex = ctxa.fillText('1',700,400);
+                 console.log('ctxactxactxactxactxa',ctxa.getImageData(0,0,700,400).data);*/
+
+                let canvadata = ctxcontent.getImageData(0,0,textdaemo.width *screenzoom* zoom ,textdaemo.height *screenzoom* zoom);
+                var data = canvadata.data;
+                let morew = canvadata.width;
+                let moreh = canvadata.height;
+
+                let coor = [];
+                let fontw = [];
+                let fonth = [];
+                for(let j =0;j<2;j++){
+                    coor[j] = [];
+                }
+                let realdata = [];
+                for(let i=0,len=data.length;i<len;i+=4){
+                    let red = data[i],
+                        green=data[i+1],
+                        blue=data[i+2],
+                        alpha= data[i+3];
+                    if(`${red} ${green} ${blue}` === '0 0 0'){
+                        realdata.push(0);
+                    }else{
+                        realdata.push(1);
+                    }
+                }
+
+                //计算二维图像
+                let lines = [];
+                for(var l=0;l<realdata.length;l+=morew){
+                    lines[l/morew]=[];
+                    for(var m=0;m<morew;m++){
+                        lines[l/morew][m] = realdata[l+m];
+                        if( realdata[l+m]===1){
+                            fonth.push(parseInt(l/morew));
+                            fontw.push(m)
+                        }
+                    }
+                }
+                //生成base64图像
+                let dataUrl = ncanvas.toDataURL({
+                    format: 'jpeg',
+                    multiplier:1,
+                });
+
+                let w = new Set(fontw);
+                let neww = Array.from(w); //去重
+                let neww2 = neww.sort(function(a,b){return a-b;}); //从小到大排列
+                let truefontwidth =neww2[neww2.length-1]-neww2[0]+1;
+
+                let h = new Set(fonth);
+                let newh = Array.from(h);//去重
+                let newh2 = newh.sort(function(a,b){return a-b;}); //从小到大排列
+                let truefontheight =newh2[newh2.length-1]-newh2[0]+1;
+
+                let scalezoom = window.devicePixelRatio
+                let returndata = {
+                    offset:[newh2[0]-0, morew-neww2[neww2.length-1]-1,  moreh-newh2[newh2.length-1]-1 ,neww2[0]-0,], //[上，右，下，左]
+                    fontTruewidth:truefontwidth,
+                    fontTrueheight:truefontheight,
+                    fontSize:options.fontSize,
+                    width:morew,
+                    height:moreh,
+                    url:dataUrl,
+                    lines:lines,
+                    text:options.textdemo,
+                    fontFamily:options.fontFamily,
+                    targetWidth:options.width,
+                    targetHeight:options.height,
+                    screenzoom:scalezoom,
+                    scaleX: options.width*scalezoom*zoom/truefontwidth,
+                    scaleY: options.height*scalezoom*zoom/truefontheight,
+                };
+                let img = new Image();
+                img.src = dataUrl;
+                img.onload = () => {resolve(returndata)};
+            });
+
+            return result;
+        },
+
+
+        initialize: function (rectOptions, textOptions, text) {
+            //console.log(rectOptions,textOptions);
+            this.callSuper('initialize', {...rectOptions, fill:rectOptions.fillinColor?rectOptions.fillinColor:'rgba(0,0,0,0)'});
+
+
+            if(textOptions.isElasticSize===0){
+                this.text = new fabric.Textbox(text, {
+                    ...textOptions,
+
+                    fill:textOptions.fontColor?textOptions.fontColor:'#ffffff',
+                    fillColor:textOptions.fontColor?textOptions.fontColor:'#ffffff',
+                    width:parseInt(this.width*this.scaleX - textOptions.xLeft - textOptions.xRight),
+                    height:parseInt(this.height*this.scaleY  - textOptions.yTop - textOptions.yBot),
+                    scaleX:1,
+                    scaleY:1,
+                    isElasticSize:textOptions.isElasticSize?textOptions.isElasticSize:0,
+                    lineHeight:parseInt((textOptions.fontSize + textOptions.verticalSpace)/textOptions.fontSize),
+
+                    screenIndex:textOptions.screenIndex,
+                    visible:textOptions.visible,
+                    eyeshow:textOptions.eyeshow,
+                    splitByGrapheme:  true,
+                    selectable: false,
+                    evented: false,
+
+                    clipTo: function(e) {
+                        if(e){
+                            e.canvas.getContext('2d').rect(-this.width/2,-this.height/2,this.width,this.height);
+                        }
+
+                    }
+                });
+
+                this.textOffsetLeft = this.text.left - this.left ;
+                this.textOffsetTop = this.text.top - this.top ;
+
+
+                this.text.text = this.textStyleFormat(this.text,this.text.textdemo);
+                this.content =  this.textStyleFormat(this.text,this.text.textdemo);
+
+
+
+
+
+            }else if(textOptions.isElasticSize===1){
+                this.text = new fabric.Textbox(text, {
+                    ...textOptions,
+
+                    fill:textOptions.fontColor?textOptions.fontColor:'#ffffff',
+                    fillColor:textOptions.fontColor?textOptions.fontColor:'#ffffff',
+                    width:parseInt(this.width*this.scaleX - textOptions.xLeft - textOptions.xRight),
+                    height:parseInt(this.height*this.scaleY  - textOptions.yTop - textOptions.yBot),
+
+                    lineHeight:parseInt((textOptions.fontSize + textOptions.verticalSpace)/textOptions.fontSize),
+                    isElasticSize:textOptions.isElasticSize?textOptions.isElasticSize:1,
+
+                    screenIndex:textOptions.screenIndex,
+                    visible:textOptions.visible,
+                    eyeshow:textOptions.eyeshow,
+                    splitByGrapheme:  true,
+                    selectable: false,
+                    evented: false,
+
+
+
+                    clipTo: function(e) {
+                        if(e){
+                            e.canvas.getContext('2d').rect(-this.width/2,-this.height/2,this.width,this.height);
+                        }
+
+                    }
+                });
+
+                this.textOffsetLeft = this.text.left - this.left ;
+                this.textOffsetTop = this.text.top - this.top ;
+
+
+                this.text.text = this.textStyleFormat(this.text,this.text.textdemo);
+                this.content =  this.textStyleFormat(this.text,this.text.textdemo);
+
+
+
+
+
+            }else if(textOptions.isElasticSize===2){ //自适应
+                this.text = new fabric.IText(text, {
+                    ...textOptions,
+
+                    fill:textOptions.fontColor?textOptions.fontColor:'#ffffff',
+                    fillColor:textOptions.fontColor?textOptions.fontColor:'#ffffff',
+
+                    lineHeight:1,
+                    isElasticSize:textOptions.isElasticSize?textOptions.isElasticSize:2,
+
+                    width:parseInt(this.width*this.scaleX - textOptions.xLeft - textOptions.xRight),
+                    height:parseInt(rectOptions.height/(this.height/textOptions.fontSize)  - textOptions.yTop - textOptions.yBot),
+                    scaleX:1,
+                    scaleY:1,
+
+                    screenIndex:textOptions.screenIndex,
+                    visible:textOptions.visible,
+                    eyeshow:textOptions.eyeshow,
+                    splitByGrapheme:  true,
+                    selectable: false,
+                    evented: false,
+
+
+                    clipTo: function(e) {
+                        if(e){
+                            let newheight = parseInt(rectOptions.height/(this.height/textOptions.fontSize)  - textOptions.yTop - textOptions.yBot);
+                            e.canvas.getContext('2d').rect(-this.width/2,
+                                -this.height/2,
+                                this.width,
+                                this.height,
+                                )
+                        }
+
+                    }
+                });
+
+
+                this.textOffsetLeft = this.text.left - this.left ;
+                this.textOffsetTop = this.text.top - this.top ;
+
+
+
+
+
+
+              //  console.log('0----init');
+                //this.isGetfontscale(text,textOptions);
+
+
+               /*
+                this.text.set('width', parseInt(this.width/this.text.scaleX - this.text.xLeft - this.text.xRight + this.text.offsetLeft) );
+                this.text.set('height', parseInt(this.height/this.text.scaleY  - this.text.yTop - this.text.yBot + this.text.offsetTop));*/
+
+
+
+            }else{
+                this.text = new fabric.Textbox(text, {
+                    ...textOptions,
+
+                    fill:textOptions.fontColor?textOptions.fontColor:'#ffffff',
+                    fillColor:textOptions.fontColor?textOptions.fontColor:'#ffffff',
+                    width:parseInt(this.width*this.scaleX - textOptions.xLeft - textOptions.xRight),
+                    height:parseInt(this.height*this.scaleY  - textOptions.yTop - textOptions.yBot),
+                    scaleX:1,
+                    scaleY:1,
+                    lineHeight:parseInt((textOptions.fontSize + textOptions.verticalSpace)/textOptions.fontSize),
+                    isElasticSize:textOptions.isElasticSize?textOptions.isElasticSize:0,
+
+                    screenIndex:textOptions.screenIndex,
+                    visible:textOptions.visible,
+                    eyeshow:textOptions.eyeshow,
+
+                    splitByGrapheme:  true,
+                    selectable: false,
+                    evented: false,
+
+
+
+                    clipTo: function(e) {
+                        if(e){
+                            e.canvas.getContext('2d').rect(-this.width/2,-this.height/2,this.width,this.height);
+                        }
+
+                    }
+                });
+
+                this.textOffsetLeft = this.text.left - this.left ;
+                this.textOffsetTop = this.text.top - this.top ;
+
+
+                this.text.text = this.textStyleFormat(this.text,this.text.textdemo);
+                this.content =  this.textStyleFormat(this.text,this.text.textdemo);
+            }
+
+            //console.warn(this.text,textOptions.visible,rectOptions.visible);
+
+
+           /* this.canvas.on('object:moving',(e)=>{
+                console.log('canvas moving');
+            });*/
+
+
+
+
+
+
+            this.on('added', async () => {
+               // console.log('1----added');
+
+                console.log('add----------------',this);
+
+
+                if(this.text.isElasticSize===2){//自适应
+
+                    //let scale1 = await this.isGetfontheitgh(textOptions);
+                    let newscale = await this.getTrueZoom(textOptions);
+
+                    let scale = {
+                        scaleX: newscale.scaleX,
+                        scaleY:newscale.scaleY,
+
+
+                    };
+                   // console.log('newscale',newscale);
+
+                    let margin1 = await this.getLeftTopMargin(textOptions,newscale.scaleX,newscale.scaleY);
+                    let margin = {
+                        marginLeft: margin1.marginLeft,//margin1.marginLeft, //margin1.marginLeft,  //window.devicePixelRatio>2?margin1.offset[3]:
+                        marginTop: margin1.marginTop
+                    };
+                   // console.log('margin1',margin1,margin,newscale.offset[3],margin1.marginLeft,window.devicePixelRatio);
+
+                    this.text.set('selected', false);
+                    this.text.set('evented', false);
+
+                    this.text.set('scaleX', scale.scaleX);
+                    this.text.set('scaleY', scale.scaleY);
+
+                    this.text.set('top', this.top - margin.marginTop);
+                    this.text.set('left', this.left - margin.marginLeft);
+                    this.text.set('offsetLeft',margin.marginLeft);
+                    this.text.set('offsetTop',margin.marginTop);
+
+                    this.text.set('width', parseInt(this.width * this.scaleX/this.text.scaleX + this.text.offsetLeft * this.scaleX/this.text.scaleX) );
+                    this.text.set('height', parseInt(this.height * this.scaleY/this.text.scaleY + this.text.offsetTop * this.scaleY));
+
+
+                }else{
+
+                    this.text.set('width', this.width );
+                    this.text.set('height', this.height);
+                    this.text.set('selected', false);
+                    this.text.set('evented', false);
+
+
+                }
+                this.text.set('selected', false);
+                this.text.set('evented', false);
+
+                this.text.set('stroke', '');
+                this.text.set('strokeWidth', 0);
+
+                this.canvas.add(this.text);
+
+
+
+            });
+
+            this.on('removed', () => {
+                this.canvas.remove(this.text);
+            });
+            this.on('mousedown:before', () => {
+
+                this._prevObjectStacking = this.canvas.preserveObjectStacking;
+                this.canvas.preserveObjectStacking = true
+
+
+                this.text.evented = false;
+                this.text.selectable = false;
+            });
+
+            this.on('mousedblclick', () => {
+
+                this.text.selectable = true
+                this.text.evented = true
+                this.canvas.setActiveObject(this.text)
+                this.text.enterEditing()
+                this.selectable = false
+            });
+            this.on('deselected', async (e) => {
+                this.canvas.preserveObjectStacking =  true;
+
+               // console.log('3----------------------------deselected');
+
+                if(this.text.isElasticSize===2){//自适应
+                    let margin = await this.getLeftTopMargin({
+                        width:this.width * this.scaleX,
+                        height:this.height * this.scaleY,
+                        fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                        linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                        underline:textOptions.underline?textOptions.underline:false,
+                        fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+                        fontSize:textOptions.fontSize?textOptions.fontSize:14,
+                        fontFamily: textOptions.fontFamily?textOptions.fontFamily:'微软雅黑',
+                        textdemo:this.text.text,
+                    },this.text.scaleX,this.text.scaleY);
+
+                    this.text.set('top', this.top - margin.marginTop);
+                    this.text.set('left', this.left - margin.marginLeft);
+                    this.text.set('offsetLeft',margin.marginLeft);
+                    this.text.set('offsetTop',margin.marginTop);
+
+                    this.text.set('width', parseInt(this.width * this.scaleX/this.text.scaleX + this.text.offsetLeft * this.scaleX/this.text.scaleX) );
+                    this.text.set('height', parseInt(this.height * this.scaleY/this.text.scaleY + this.text.offsetTop * this.scaleY));
+
+                }else{
+                    this.recalcTextPosition();
+                }
+
+            });
+
+
+            this.on('moving', async (e) => {
+                //console.log('moving----------------',this);
+                if(this.text.isElasticSize===2){//自适应
+
+                    const rectLeftTop = this.getPointByOrigin('left', 'top');
+
+                    this.text.set('left', rectLeftTop.x - this.text.offsetLeft );
+                    this.text.set('top', rectLeftTop.y - this.text.offsetTop );
+
+                }else{
+                    this.recalcTextPosition();
+                }
+
+                // console.log('moving',e);
+
+            });
+            this.on('moved',()=>{
+               // console.warn('moved');
+
+
+               // console.log(this.text.left,this.left);
+
+                this.text.evented = false;
+                this.text.selectable = false;
+            });
+
+            this.on('rotating', () => {
+                this.text.rotate(this.angle ); //this.text.angle + this.angle - this._prevAngle
+                this.recalcTextPosition();
+                this._prevAngle = this.angle
+            });
+
+            this.on('scaling', async (e) => {
+
+                if(this.text.isElasticSize===2){//自适应
+
+                    /*this.text.set('width', parseInt(this.width * this.scaleX/this.text.scaleX - this.text.xLeft - this.text.xRight + this.text.offsetLeft* this.scaleX) );
+                    this.text.set('height', parseInt(this.height * this.scaleY/this.text.scaleY  - this.text.yTop - this.text.yBot + this.text.offsetTop * this.scaleY));*/
+
+                }else{
+
+                    this.text.set('width', parseInt(this.width*this.scaleX - this.text.xLeft - this.text.xRight));
+                    this.text.set('height', parseInt(this.height*this.scaleY  - this.text.yTop - this.text.yBot));
+
+                }
+
+            });
+            this.on('scaled', async (e) => {
+
+                this.recalcTextPosition();
+
+                this.set('width', parseInt(this.width*e.target.scaleX));
+                this.set('height', parseInt(this.height*e.target.scaleY));
+                this.set('scaleX', 1);
+                this.set('scaleY', 1);
+
+                if(this.text.isElasticSize!==2){ //非自适应
+
+                    let newtext = this.textStyleFormat(this.text,this.text.textdemo); //文字 格式化
+                    this.text.set('text', newtext);
+                    this.set('content', newtext);
+
+                    this.text.set('height', parseInt(this.height*e.target.scaleY ));
+
+                }
+
+                if(this.text.isElasticSize===2){
+
+                    let scale = await this.getTrueZoom({
+                        width:this.width * this.scaleX,
+                        height:this.height * this.scaleY,
+                        fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                        linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                        underline:textOptions.underline?textOptions.underline:false,
+                        fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+                        fontSize:textOptions.fontSize?textOptions.fontSize:14,
+                        fontFamily: textOptions.fontFamily?textOptions.fontFamily:'微软雅黑',
+                        textdemo:this.text.text,
+                    });
+                   // console.log('最终',scale);
+                    let margin = await this.getLeftTopMargin({
+                        width:this.width * this.scaleX,
+                        height:this.height * this.scaleY,
+                        fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                        linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                        underline:textOptions.underline?textOptions.underline:false,
+                        fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+                        fontSize:textOptions.fontSize?textOptions.fontSize:14,
+                        fontFamily: textOptions.fontFamily?textOptions.fontFamily:'微软雅黑',
+                        textdemo:this.text.text,
+                    },scale.scaleX,scale.scaleY);
+
+                    this.text.set('scaleX', scale.scaleX);
+                    this.text.set('scaleY', scale.scaleY);
+                    this.text.set('top', this.top - margin.marginTop);
+                    this.text.set('left', this.left - margin.marginLeft);
+                    this.text.set('offsetLeft',margin.marginLeft);
+                    this.text.set('offsetTop',margin.marginTop);
+
+                    this.text.set('width', parseInt(this.width * this.scaleX/this.text.scaleX + this.text.offsetLeft * this.scaleX/this.text.scaleX) );
+                    this.text.set('height', parseInt(this.height * this.scaleY/this.text.scaleY + this.text.offsetTop * this.scaleY)); //+ this.text.offsetTop * this.scaleY
+
+                    this.canvas.renderAll();
+                    this.setCoords();
+                }
+
+                this.text.evented = false;
+                this.text.selectable = false;
+
+
+            });
+
+
+            this.text.on('editing:entered',(e)=>{
+
+                if(this.text.isElasticSize===2){//自适应
+                    this.set('fill','#fffdcaf2');
+                    this.set('stroke','#999');
+                    this.set('strokeWidth',1);
+                    this.set('strokeDashArray',[5,1]);
+
+                    this.text.set('hasBorders',false);
+
+                }else{
+                    this.text.set('width', parseInt(this.width - this.text.xLeft - this.text.xRight ));
+                    this.text.set('height', parseInt(this.height - this.text.yTop - this.text.yBot ));
+                }
+
+
+            });
+            this.text.on('changed',(e)=>{
+                this.text.set('textdemo', this.text.text);
+                this.set('content', this.text.text);
+
+                if(this.text.isElasticSize!==2) {
+                    let newtext = this.textStyleFormat(this.text); //文字 格式化
+                    this.text.set('text', newtext);
+                    this.set('textdemo', newtext);
+
+                    this.text.set('width', parseInt(this.width - this.text.xLeft - this.text.xRight ));
+                    this.text.set('height', parseInt(this.height - this.text.yTop - this.text.yBot ));
+
+                }
+                if(this.text.isElasticSize===2){//自适应
+                    /*
+                    this.isGetfontheitgh(textOptions);
+                    this.set('textdemo',  this.text.text);
+
+                    console.log('矩形：',this.width,this.scaleX);
+                    this.text.set('width', parseInt(this.text.width/this.text.scaleX - this.text.xLeft - this.text.xRight + this.text.offsetLeft));
+                    this.text.set('height', parseInt(this.text.height/this.text.scaleY  - this.text.yTop - this.text.yBot + this.text.offsetTop));*/
+
+                }
+
+            });
+            this.text.on('editing:exited', async () => {
+
+                //console.warn('editing:exited');
+
+                if(this.text.isElasticSize===2){//自适应
+                    this.set('fill','');
+                    this.set('stroke','#999');
+                    this.set('strokeWidth',0);
+                    this.set('strokeDashArray',[5,1]);
+
+                    let scale = await this.getTrueZoom({
+                        width:this.width * this.scaleX,
+                        height:this.height * this.scaleY,
+                        fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                        linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                        underline:textOptions.underline?textOptions.underline:false,
+                        fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+                        fontSize:textOptions.fontSize?textOptions.fontSize:14,
+                        fontFamily: textOptions.fontFamily?textOptions.fontFamily:'微软雅黑',
+                        textdemo:this.text.text,
+                    });
+                    let margin = await this.getLeftTopMargin({
+                        width:this.width * this.scaleX,
+                        height:this.height * this.scaleY,
+                        fontWeight:textOptions.fontWeight?textOptions.fontWeight:'normal',
+                        linethrough:textOptions.linethrough?textOptions.linethrough:false,
+                        underline:textOptions.underline?textOptions.underline:false,
+                        fontStyle:textOptions.fontStyle?textOptions.fontStyle:'normal',
+                        fontSize:textOptions.fontSize?textOptions.fontSize:14,
+                        fontFamily: textOptions.fontFamily?textOptions.fontFamily:'微软雅黑',
+                        textdemo:this.text.text,
+                    },scale.scaleX,scale.scaleY);
+
+                    this.text.set('scaleX', scale.scaleX);
+                    this.text.set('scaleY', scale.scaleY);
+                    this.text.set('top', this.top - margin.marginTop);
+                    this.text.set('left', this.left - margin.marginLeft);
+                    this.text.set('offsetLeft',margin.marginLeft);
+                    this.text.set('offsetTop',margin.marginTop);
+
+                    this.text.set('width', parseInt(this.width * this.scaleX/this.text.scaleX + this.text.offsetLeft * this.scaleX/this.text.scaleX) );
+                    this.text.set('height', parseInt(this.height * this.scaleY/this.text.scaleY + this.text.offsetTop * this.scaleY));
+
+                    this.canvas.renderAll();
+                    this.setCoords();
+
+                }else{
+                    this.text.set('width', parseInt(this.width - this.text.xLeft - this.text.xRight ));
+                    this.text.set('height', parseInt(this.height - this.text.yTop - this.text.yBot ));
+                }
+
+
+
+                this.text.evented = false;
+                this.text.selectable = false;
+                this.selectable = true;
+
+
+            })
+
+
+
+
+        }
+    })
+
+    fabric.RectWithText.fromObject = function(object, callback) {
+        return fabric.Object._fromObject('RectWithText', object, callback, 'text');
+    };
+})(typeof exports !== 'undefined' ? exports : this);

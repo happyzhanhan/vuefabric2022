@@ -298,7 +298,7 @@
 
       fabric.Object.prototype.originX = 'center';  //设置中心为左上角
       fabric.Object.prototype.originY = 'center';   //设置中心为左上角
-            // canvas.backgroundColor = '#ffffff';
+            canvas.backgroundColor = '#fff';
 
       canvas.controlsAboveOverlay = false;
       canvas.skipOffscreen = true;
@@ -1448,7 +1448,7 @@
             that.canvas.remove(...that.canvas.getObjects('sMask'));
             const pathOption = {
                 selectable: false,
-                fill: '#f1f1f1',  //rgb(40,40,40)
+                fill: '#f2f2f2',  //rgb(40,40,40)
                 hoverCursor: 'default',
                 evented: false,
                 excludeFromExport: true,
@@ -1474,6 +1474,7 @@
                 top: bg.top-2,
                 width:1000,
                 height: 1000+options.height,
+                // fill: '#00ff00',
             });
             const rect2 = new fabric.Rect({
                 ...pathOption,
@@ -1481,6 +1482,7 @@
                 top: bg.top-1000,
                 width:2000 + options.width,
                 height: 1000,
+              // fill: '#ff0000',
             });
             const rect3 = new fabric.Rect({
                 ...pathOption,
@@ -1488,6 +1490,7 @@
                 top: bg.top-2,
                 width:1000,
                 height: 1000+options.height,
+              // fill: '#00ffff',
             });
             const rect4 = new fabric.Rect({
                 ...pathOption,
@@ -1495,6 +1498,7 @@
                 top: options.height + bg.top,
                 width:2000 + options.width,
                 height: 1000,
+              // fill: '#0000ff',
             });
             that.canvas.add(rect1);
             rect1.bringToFront();
@@ -1542,7 +1546,7 @@
                     },'ALL'); //画尺子
                 },500)
             }*/
-            this.canvas.remove(...this.canvas.getObjects('sRuler')); //删除已有的标尺
+            /*this.canvas.remove(...this.canvas.getObjects('sRuler')); //删除已有的标尺
             setTimeout(()=>{
                 that.drawRulerInit({
                     axisWidth:1,
@@ -1554,7 +1558,7 @@
                     width:options.width,
                     height:options.height,
                 },'ALL'); //画尺子
-            },500)
+            },500)*/
 
 
         },
@@ -3405,6 +3409,7 @@
                 JsBarcode('#barcode' + option.id, number, {
                     format: option.format ? option.format : "CODE128",  //条形码的格式
                     lineColor: option.lineColor ? option.lineColor : "#000000",  //线条颜色
+                    background: option.bgcolor ? option.bgcolor: '#FFFFFF',//背景颜色
                     margin: option.margin ? option.margin : 0, // 条码四边空白（默认为10px）
                     width: option.lineWidth ? option.lineWidth : 2, //线宽
                     height: option.height ? option.height : 20,  //条码高度
@@ -3490,6 +3495,7 @@
                     hasRotatingPoint: options.hasRotatingPoint !== false ? true : options.hasRotatingPoint,
 
                     screenIndex: options.screenIndex ? options.screenIndex : 0,
+                    bgcolor: options.bgcolor ? options.bgcolor: '#FFFFFF',
                 };
                 //console.warn(options.visible);
 
@@ -4302,10 +4308,13 @@
                             height: options.height,
                             fill: '',  //options.rectColor?(options.rectColor===''?'rgba(0,0,0,0)':options.rectColor):
                             rectColor: options.rectColor ? options.rectColor : '#ffffff',
+                            fillinColor:options.fillinColor ? options.fillinColor : '',
 
                             stroke: options.stroke ? options.stroke : '',
-                            strokeWidth: options.strokeWidth ? options.strokeWidth : null,
-                            strokeDashArray: [3, 1],
+                            strokeWidth: options.strokeWidth ? options.strokeWidth : 0,
+                            strokeDashArray: options.strokeDashArray ? options.strokeDashArray : [0, 0],
+
+                            textPadding: options.textPadding ? options.textPadding : 0,
 
                             fontColor: options.fontColor ? options.fontColor : '#000000',
                             fontSize: options.fontSize ? options.fontSize : 14,
@@ -4358,7 +4367,6 @@
                             yTop: options.yTop ? options.yTop : 0,
                             yBot: options.yBot ? options.yBot : 0,
 
-
                             width: options.width,
                             height: options.height,
 
@@ -4403,19 +4411,20 @@
                             eyeshow: options.eyeshow,
                             screenIndex: options.screenIndex,
 
+                            fillinColor:options.fillinColor ? options.fillinColor : '',
+
+                            stroke: options.stroke ? options.stroke : '',
+                            strokeWidth:  0,
+                            strokeDashArray: options.strokeDashArray ? options.strokeDashArray : [0, 0],
+
+                            textPadding: options.textPadding ? options.textPadding : 0,
                         };
 
-                        /*  */
-                        //console.warn(textOptions.visible,rectOptions.visible);
                         rectOptions.textRectData = textOptions;
                         canvasObject = new fabric.RectWithText(rectOptions, textOptions, options.textdemo);
-
-                        /* this.$emit('idAdd');   //this.cid = this.cid + 1;
-                       this.cid = this.cid + 1;*/
-
                         canvasObject.setCoords();
 
-                         console.log('999999999999999999999999',canvasObject);
+                         // console.log('999999999999999999999999',canvasObject);
                         break;
                     case 'tableView':
                         let tableStyle = {
@@ -5187,6 +5196,7 @@
                                 visible: options.visible !== false ? true : options.visible,                          //元素是否可见
                                 eyeshow: options.eyeshow,
                                 screenIndex: options.screenIndex,
+                                bgcolor:options.bgcolor,
 
                             });
                             canvasObject.height = canvasObject.width
@@ -5211,7 +5221,7 @@
                         height: options.height ? options.height : 80,  // 二维码图片高度（默认为256px）
                         correctLevel: QRErrorCorrectLevel.H,    // 二维码容错level（默认为高）
                         reverse: false,        // 反色二维码，二维码颜色为上层容器的背景颜色
-                        background: options.background ? options.background : "#ffffff",    // 二维码背景颜色（默认白色）
+                        background: options.bgcolor ? options.bgcolor : "#ffffff",    // 二维码背景颜色（默认白色）
                         foreground: options.lineColor ? options.lineColor : "#000000"     // 二维码颜色（默认黑色）
                     });
                     let newimg = document.createElement('img');
@@ -5251,6 +5261,7 @@
                             visible: options.visible,
                             eyeshow: options.eyeshow,
                             screenIndex: options.screenIndex,
+                            bgcolor:options.bgcolor,
 
                         });
                         canvas.add(canvasObject);
@@ -5422,6 +5433,7 @@
                     id: options.id,
                     format: options.format ? options.format : "CODE128",  //条形码的格式
                     lineColor: options.color ? options.color : "#000000",  //线条颜色
+                    background: options.bgcolor?options.bgcolor:'rgba(255,255,255,0.3)',//设置条形码的背景 #f1edea
                     margin: options.margin ? options.margin : 0, // 条码四边空白（默认为10px）
                     width: options.barlineWidth, //线宽
                     height: options.height ? options.height : 20,  //条码高度
@@ -5460,13 +5472,14 @@
                         visible: options.visible,
                         eyeshow: options.eyeshow,
                         screenIndex: options.screenIndex,
+                        bgcolor:options.bgcolor,
 
                     });
 
                     const rect = new fabric.Rect({
                         width: options.width,  //document.getElementById('barcode').width>options.width?document.getElementById('barcode').width:
                         height: options.height,
-                        fill: '#f1edea',
+                        fill: 'rgba(255,255,255,0.3)', // #f1edea
                         originX: 'left',
                         originY: 'top',
                         left: 0,
@@ -5486,6 +5499,7 @@
                         visible: options.visible,
                         eyeshow: options.eyeshow,
                         screenIndex: options.screenIndex,
+                        bgcolor:options.bgcolor,
                     });
 
                     canvasObject = new fabric.Group([rect, barcodeIMG], {
@@ -5528,6 +5542,7 @@
                         visible: options.visible,
                         eyeshow: options.eyeshow,
                         screenIndex: options.screenIndex,
+                        bgcolor:options.bgcolor,
 
                         /*clipTo:(e)=>{
                             if(e){
@@ -5611,6 +5626,7 @@
                 visible: options.visible,
                 eyeshow: options.eyeshow,
                 screenIndex: options.screenIndex,
+                bgcolor: options.bgcolor,
 
 
             });
@@ -5674,6 +5690,7 @@
                 visible: options.visible,
                 eyeshow: options.eyeshow,
                 screenIndex: options.screenIndex,
+                bgcolor:options.bgcolor,
             };
             let img = await this.drawbarcode(options.imgText, newoptions);
 
@@ -6515,6 +6532,7 @@
             canvas.remove(groups);
 
             let canvasObject = new fabric.RectWithText(data.rectOptions, data.textOptions, data.textdemo);
+          // let canvasObject = new fabric.textRectNew({...data.rectOptions, ...data.textOptions,});
 
             let that = this;
             setTimeout(() => {
@@ -6780,6 +6798,11 @@
 
                 visible: JSON.parse(JSON.stringify(target.visible)),
                 zIndex: JSON.parse(JSON.stringify(target.zIndex)),
+
+                fillinColor: JSON.parse(JSON.stringify(target.fillinColor)),
+                stroke: JSON.parse(JSON.stringify(target.stroke)),
+                strokeWidth: JSON.parse(JSON.stringify(target.strokeWidth)),
+                textPadding: JSON.parse(JSON.stringify(target.textPadding)),
             };
 
             let canvas = this.canvas;
@@ -6791,14 +6814,11 @@
                 }
             });
 
-            // console.log('new',newtextdata);
 
             let obj = await this.createElement('TextRect', {...newtextdata});
-            // console.log(obj.id);
 
             let that = this;
             setTimeout(() => {
-
 
                 that.setTop();                              //遮罩置顶
                 canvas.requestRenderAll();

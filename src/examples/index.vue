@@ -553,6 +553,7 @@
                 setTimeout(()=>{
                     this.showcanvas = true;
                 })*/
+
             });
 
 
@@ -575,13 +576,14 @@
                 this.draw('Barcode');
             },10);*/
 
-
+            this.$refs.canvas.setbackground('#fff');
 
           //  this.draw('TextRectBox');
-            this.draw('Rect');
+            // this.draw('Rect');
 
-            this.draw('Qrcode');
+            // this.draw('Qrcode');
             //this.draw('Html');
+            this.draw('TextRect');
 
            /* let bardata = await this.$refs.canvas.createElement('Barcodematrix',
                 {imgText:'989874',
@@ -739,33 +741,39 @@
                             left:22,
                             top:10,
                             hasRotatingPoint:true,
-                            width:400,
-                            height:100,
-                            fontColor:'#f00',
-                            rectColor:'',
+                            width:500,
+                            height:200,
+                            fontColor:'#000000',
+
                             /*stroke:'#f00',*/
-                            strokeWidth: 0,
+                            // strokeWidth: 0,
                             xLeft:0,
                             yTop:0,
                             xRight:0,
                             yBot:0,
                             fontFamily:'微软雅黑',
-                            textAlign:'right',
-                            maxLines:3,
+                            textAlign:'left',
+                            maxLines:10,
                             omitStyleText:'...',
                             omitStyle:1,
                             newline:'',
                             minFontSize:12,
-                            isElasticSize:2,
+
                             visible:true,
                             fontSize:20,
-                            textdemo:'123',
+                            textdemo:'TEXT1', // 软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑
                             originXY:['right','bottom'],
 
                            // fontWeight:'bold',
                           //  linethrough:true,
                           //  underline:true,
                           //  fontStyle:"italic"
+                            isElasticSize:2,
+
+                            stroke:'#ff0000',
+                            strokeWidth: 10,
+                            fillinColor:'',
+                            textPadding:10,
 
                         }
                         break;
@@ -825,6 +833,8 @@
 
                             width: 500,
 
+                            stroke:'#f00',
+                            strokeWidth: 2,
                             visible:true,
                         }
                         break;
@@ -856,10 +866,11 @@
                             left:60,
                             top:40,
                             width:200,
-                            height:30,
+                            height:200,
                             hasRotatingPoint:false,
                             imgText: '69012345679',
                             color:'#f00',
+                            bgcolor:'#000000',
                             visible:true,
 
                         };
@@ -868,13 +879,14 @@
                         options = {
                             left:100,
                             top:40,
-                            width:50,
-                            height:50,
-                            barcodeType:1,
+                            width:300,
+                            height:300,
+                            barcodeType:2,
                             hasRotatingPoint:false,
                             imgText: '69012345679',
                             color:'#f00',
                             lineColor:'#ff0000',
+                            bgcolor:'#000000',
                             visible:true,
                         };
                         break;
@@ -1044,17 +1056,21 @@
                 let obj = this.$refs.canvas.getActiveObject();
                 console.log(obj.toJSON());
 
-                let newobj = await this.$refs.canvas.changeTextRender({...obj.toJSON(),
-                    fontFamily:'宋体',
-                    fontType:'宋体',
-                    fontColor:'#0f0',
-                    isElasticSize: 2,
-                    maxLines:2,
-                    omitStyleText:'┛',
-                    left:100,
-                    top:100,
-                },'我是新文字我是新文字我是新文字我',obj);
-                console.log(newobj);
+                obj.set('isElasticSize',obj.isElasticSize!==2?2:0)
+                this.$refs.canvas.changeTextType(obj, obj.textdemo);
+                // let newobj = await this.$refs.canvas.changeTextRender({...obj.toJSON(),
+                //     fontFamily:'宋体',
+                //     fontType:'宋体',
+                //     fontColor:'#0f0',
+                //     isElasticSize: 2,
+                //     maxLines:2,
+                //     omitStyleText:'┛',
+                //     left:100,
+                //     top:100,
+                // },'我是新文字我是新文字我是新文字我',obj);
+                // console.log(newobj);
+
+                this.$refs.canvas.renderCanvas(); //画布渲染变化
             },
 
 
