@@ -214,6 +214,10 @@
                @dblclick="draw('TextRect')"
             ></i>
 
+            <i class="ps-icon17 ps-icon"
+               @dblclick="draw('Price')"
+            ></i>
+
             <i class="ps-icon7 ps-icon"
                @dblclick="draw('TextRectBox')"
             ></i>
@@ -583,7 +587,7 @@
 
             // this.draw('Qrcode');
             //this.draw('Html');
-            this.draw('TextRect');
+            // this.draw('TextRect');
 
            /* let bardata = await this.$refs.canvas.createElement('Barcodematrix',
                 {imgText:'989874',
@@ -760,7 +764,7 @@
                             minFontSize:12,
 
                             visible:true,
-                            fontSize:20,
+                            fontSize:40,
                             textdemo:'TEXT1', // 软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑微软雅黑
                             originXY:['right','bottom'],
 
@@ -768,7 +772,7 @@
                           //  linethrough:true,
                           //  underline:true,
                           //  fontStyle:"italic"
-                            isElasticSize:2,
+                            isElasticSize:0,
 
                             stroke:'#ff0000',
                             strokeWidth: 10,
@@ -901,7 +905,144 @@
                             visible:true,
                         };
                         break;
-                    default:
+                    case 'Price':
+                        options = {
+                            // left: 0,
+                            // top: 0,
+                            // width: 400,
+                            // height: 200,
+                            // angle: 0,
+                            //
+                            // thousandSeparator: ',', // 千分位分隔符
+                            // text: '100.123456789', // 价格取值
+                            //
+                            // decimalDigit: 5, // 小数位数
+                            // roundingMode: 4, // 舍入模式   7：无  4：四舍五入 0：向上取整  1：向下取整
+                            //
+                            // horizontalAlign: 2, // 整体横向对齐 012
+                            // verticalAlign: 2, // 整体竖向对齐 012
+                            //
+                            // textColor: '#FF55AA', // 文本颜色
+                            // bgcolor: '#FFFF00', // 背景颜色
+                            //
+                            // bgOpacity: 0, // 背景透明1：透明，0：取背景颜色
+                            // nopadding: 1, // 考虑文字顶和底部去除 1：去除边距，2：保留文字边距
+                            // gizp: 1, // 是否压缩 1：文字小于宽度压缩， 0：不做压缩截取
+                            //
+                            // stroke: '#000000', // 边框颜色
+                            // strokeWidth: 0, // 边框粗细
+                            //
+                            // /**
+                            //  * 前缀
+                            //  */
+                            // prefix: '￥', // 前缀
+                            // 'prefixIfBold': 0, // 前缀是否加粗(0:不加粗,1:加粗)
+                            // 'prefixIfItalic': 0, // 前缀是否斜体(0:不斜体,2:斜体)
+                            // 'prefixIfStrikeThrough': 0, // 前缀是否中划线(0:不中划线,1:中划线)
+                            // 'prefixIfUnderline': 0, // 前缀是否下划线(0:不下划线,1:下划线)
+                            // prefixFontType: '微软雅黑', // 字体
+                            // prefixFontSize: 25, // 字号
+                            // prefixPlace: 0, // 前缀的位置  上：0  中：1  下：2
+                            // /**
+                            //  * 整数
+                            //  */
+                            // 'integerIfBold': 0, // 整数部分是否加粗(0:不加粗,1:加粗)
+                            // 'integerIfItalic': 0, // 整数部分是否斜体(0:不斜体,2:斜体)
+                            // 'integerIfStrikeThrough': 0, // 整数部分是否中划线
+                            // 'integerIfUnderline': 0, // 整数部分是否下划线
+                            // integerFontType: '微软雅黑', // 字体
+                            // integerFontSize: 50, // 字号
+                            // /**
+                            //  * 小数分隔符
+                            //  */
+                            // decimalSeparator: '.', // 小数分隔符
+                            // 'dotIfBold': 0, // 小数点是否加粗(0:不加粗,1:加粗)
+                            // 'dotIfItalic': 0, // 小数点是否斜体(0:不斜体,2:斜体)
+                            // dotFontType: '宋体', // 字体
+                            // dotFontSize: 50, // 字号
+                            // /**
+                            //  * 小数
+                            //  */
+                            // 'decimalIfBold': 0, // 小数是否加粗(0:不加粗,1:加粗)
+                            // 'decimalIfItalic': 0, // 小数是否斜体(0:不斜体,2:斜体)
+                            // 'decimalIfStrikeThrough': 0, // 小数是否中划线
+                            // 'decimalIfUnderline': 0, // 小数是否下划线
+                            // decimalFontType: '微软雅黑', // 字体
+                            // decimalFontSize: 50, // 字号
+                            // decimalPlace: 0, // 小数在整数的位置  上：0  中：1  下：2
+                            // /**
+                            //  * 后缀
+                            //  */
+                            // postfix: '/斤', // 后缀suffix
+                            // 'postfixIfBold': 0, // 后缀是否加粗(0:不加粗,1:加粗)
+                            // 'postfixIfItalic': 0, // 后缀是否斜体(0:不斜体,2:斜体)
+                            // 'postfixIfStrikeThrough': 0, // 后缀是否中划线
+                            // 'postfixIfUnderline': 0, // 后缀是否下划线
+                            // postfixFontType: '微软雅黑', // 字体
+                            // postfixFontSize: 20, // 字号
+                            // postfixPlace: 0, // 后缀的位置  上：0  中：1  下：2       小数下：3           小数上：4
+                            // visible: true
+
+                            "id": 3,
+                            "visible": true,
+                            "content": "8888.23456",
+                            text: "8888.23456",
+                            "fieldCode": "price",
+                            "color": "#ff0000",
+                            "conRealResult": 1,
+                            "horizontalAlign": 0,
+                            "verticalAlign": 0,
+                            textColor: "#ff0000",
+                            bgcolor: "#ffff00",
+                            "thousandSeparator": ",",
+                            "decimalDigit": 2,
+                            "roundingMode": 7,
+                            "prefix": "￥",
+                            "prefixIfBold": 0,
+                            "prefixIfItalic": 0,
+                            "prefixIfStrikeThrough": 0,
+                            "prefixIfUnderline": 0,
+                            "prefixFontType": "Microsoft YaHei",
+                            "prefixFontSize": 50,
+                            "prefixPlace": 0,
+                            "integerIfBold": 0,
+                            "integerIfItalic": 0,
+                            "integerIfStrikeThrough": 0,
+                            "integerIfUnderline": 0,
+                            "integerFontType": "Microsoft YaHei",
+                            "integerFontSize": 50,
+                            "decimalSeparator": ".",
+                            "dotIfBold": 0,
+                            "dotIfItalic": 0,
+                            "dotFontType": "Microsoft YaHei",
+                            "dotFontSize": 50,
+                            "decimalIfBold": 0,
+                            "decimalIfItalic": 0,
+                            "decimalIfStrikeThrough": 0,
+                            "decimalIfUnderline": 0,
+                            "decimalFontType": "Microsoft YaHei",
+                            "decimalFontSize": 50,
+                            "decimalPlace": 0,
+                            "postfix": "元",
+                            "postfixIfBold": 0,
+                            "postfixIfItalic": 0,
+                            "postfixIfStrikeThrough": 0,
+                            "postfixIfUnderline": 0,
+                            "postfixFontType": "Microsoft YaHei",
+                            "postfixFontSize": 50,
+                            "postfixPlace": 0,
+                            "screenIndex": 0,
+                            "zIndex": 3,
+                            "width": 250,
+                            "height": 40,
+                            "fillinColor": "",
+                            "stroke": "#000000",
+                            "strokeWidth": 0,
+                            "type": "Price"
+                        }
+                        break;
+
+                     default:
                         options = {
                             left:0,
                             top:0,
@@ -1551,6 +1692,21 @@
             }
             &:hover{
                 background: url("./../../static/newps/images/ps-icon7-3.png") no-repeat;
+            }
+        }
+        i.ps-icon17{
+            width: 30px;
+            height: 25px;
+            display: inline-block;
+            background: url("./../../static/newps/images/ps-icon17.png") no-repeat;
+            &.hover,&:active{
+                background: url("./../../static/newps/images/ps-icon17-2.png") no-repeat;
+                &:hover{
+                    background: url("./../../static/newps/images/ps-icon17-2.png") no-repeat;
+                }
+            }
+            &:hover{
+                background: url("./../../static/newps/images/ps-icon17-3.png") no-repeat;
             }
         }
         i.ps-icon8{
