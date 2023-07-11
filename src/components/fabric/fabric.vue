@@ -2691,6 +2691,12 @@
                         object.scaleX = 1;
                         object.scaleY = 1;
                     }
+                    if (object.isType === 'equalImage') {
+                      object.width = parseInt(object.width * object.scaleX);
+                      object.height = parseInt(object.height * object.scaleY);
+                      object.scaleX = 1;
+                      object.scaleY = 1;
+                    }
                     if (object.isType === 'Image2') {
                         object.width = parseInt(object.width * object.scaleX);
                         object.height = parseInt(object.height * object.scaleY);
@@ -2786,6 +2792,13 @@
                     _clipboard.scaleX = 1;
                     _clipboard.scaleY = 1;
                 }
+
+              if (_clipboard.isType === 'equalImage') {
+                _clipboard.width = parseInt(_clipboard.width * _clipboard.scaleX);
+                _clipboard.height = parseInt(_clipboard.height * _clipboard.scaleY);
+                _clipboard.scaleX = 1;
+                _clipboard.scaleY = 1;
+              }
 
                 //  console.log('复制？1',_clipboard,_clipboard.isType,_clipboard.copyId);
                 if (_clipboard.isType === 'TextRect') {
@@ -3416,7 +3429,7 @@
                 // console.log(barbox,bardom);
 
                 JsBarcode('#barcode' + option.id, number, {
-                    format: option.format ? option.format : "CODE128",  //条形码的格式
+                    format: option.barcodeType ? option.barcodeType : "CODE128",  //条形码的格式
                     lineColor: option.lineColor ? option.lineColor : "#000000",  //线条颜色
                     background: option.bgcolor ? option.bgcolor: '#FFFFFF',//背景颜色
                     margin: option.margin ? option.margin : 0, // 条码四边空白（默认为10px）
@@ -3835,7 +3848,8 @@
                         return canvasObject;
                     case 'equalImage':
                         // console.warn('equalImage',options);
-                        canvasObject = that.createEqualImageImage(options);
+                        canvasObject = await that.createEqualImageImage(options);
+                        resolve(canvasObject);
                         return canvasObject;
                     case 'Barcode':           //----------------------------------------------------------------------------------------条码
                         canvasObject = await that.createBarcode(options);
@@ -5446,7 +5460,7 @@
 
                 JsBarcode("#barcode" + options.id, options.imgText, {
                     id: options.id,
-                    format: options.format ? options.format : "CODE128",  //条形码的格式
+                    format: options.barcodeType ? options.barcodeType : "CODE128",  //条形码的格式
                     lineColor: options.color ? options.color : "#000000",  //线条颜色
                     background: options.bgcolor?options.bgcolor:'rgba(255,255,255,0.3)',//设置条形码的背景 #f1edea
                     margin: options.margin ? options.margin : 0, // 条码四边空白（默认为10px）
@@ -5544,7 +5558,7 @@
                         fill: options.lineColor,
                         color: options.color ? options.color : "#000000",
 
-                        format: options.format ? options.format : "CODE128",  //条形码的格式
+                      barcodeType: options.barcodeType ? options.barcodeType : "CODE128",  //条形码的格式
 
                         lockRotation: true,
                         flipX: false,
@@ -5696,7 +5710,7 @@
 
             let newoptions = {
                 id: options.id ? options.id : 0,
-                format: options.item(1).format ? options.item(1).format : "CODE128",  //条形码的格式
+                barcodeType: options.barcodeType || "CODE128",  //条形码的格式
                 lineColor: options.color ? options.color : '#000000',  //线条颜色
                 margin: 0, // 条码四边空白（默认为10px）
                 lineWidth: lineWidth, //线宽
@@ -5795,13 +5809,26 @@
                     let imgwidth = 0;
                     let imgheight = 0;
 
+                  if (options.imgText === 'equal') {
                     if (img.width / img.height > options.width / options.height) {
-                        imgwidth = options.width;
-                        imgheight = options.width / (img.width / img.height);
+                      imgwidth = options.width
+                      imgheight = options.width / (img.width / img.height)
                     } else {
-                        imgheight = options.height;
-                        imgwidth = options.height * (img.width / img.height);
+                      imgheight = options.height
+                      imgwidth = options.height * (img.width / img.height)
                     }
+                  } else {
+                    imgwidth = options.width
+                    imgheight = options.height
+                  }
+
+                  // if (img.width / img.height > options.width / options.height) {
+                  //       imgwidth = options.width;
+                  //       imgheight = options.width / (img.width / img.height);
+                  //   } else {
+                  //       imgheight = options.height;
+                  //       imgwidth = options.height * (img.width / img.height);
+                  //   }
 
 
                     var canvasImage = new fabric.Image(img, {
@@ -5825,7 +5852,7 @@
                         scaleX: imgwidth / img.width,
                         scaleY: imgheight / img.height,
 
-                        angle: options.angle ? options.angle : 0,
+                        // angle: options.angle ? options.angle : 0,
                         name: options.name ? options.name : 'Image',
 
                         stroke: options.stroke ? options.stroke : '',                              // 边框颜色
@@ -5849,7 +5876,7 @@
                         originY: "center",
                         width: options.width ? options.width : 100,
                         height: options.height ? options.height : 100,
-                        fill: options.background ? options.background : '#eeeeee',
+                        fill: options.background ? options.background : '',
 
                     });
 
@@ -5863,33 +5890,62 @@
                         originY: "top",
                         padding: 0,
                         id: options.id,
-
-                        hasRotatingPoint: false,
+                        url: options.url,
+                        src: options.url,
+                        hasRotatingPoint: true,
                         lockScalingFlip: true,
                         minScaleLimit: 0.2,
-
+                        imgText: options.imgText, // equal：代表自适应的图片
                         eyeshow: options.eyeshow,
                         screenIndex: options.screenIndex,
+
+                      copyId: options.copyId,
+                      zIndex: options.zIndex ? options.zIndex : options.id,
+                      type: options.type ? options.type : 0,
+                      component: "component",
+                      isDiff: 'static',
+                      flipX: false,
+                      flipY: false,
+                      stopContextMenu: true,                            //  禁掉鼠标右键默认事件
+                      lockSkewingX: true,                               //  禁掉按住shift时的变形
+                      lockSkewingY: true,
+
+                      angle: options.angle ? options.angle : 0,
+                      name: options.name ? options.name : 'Image',
+
+                      stroke: options.stroke ? options.stroke : '',                              // 边框颜色
+                      strokeWidth: options.strokeWidth ? options.strokeWidth : 0,                             // 边框宽度
+                      strokeDashArray: options.strokeDashArray ? options.strokeDashArray : [0, 0],              // 边框样式 虚线 [5,1]     直线[0,0]  线段也是这个参数
+
+                      selectable: options.selectable !== false ? true : options.selectable,                 //元素是否可选中  如段码屏中可见不可移动false
+                      visible: options.visible !== false ? true : options.visible,                          //元素是否可见
+
                     });
 
-                    group.on('scaling', function (e) {
-                        let newimgwidth = 0;
-                        let newimgheight = 0;
 
-                        if (img.width / img.height > (group.width * group.scaleX) / (group.height * group.scaleY)) {
-                            newimgwidth = (group.width * group.scaleX);
-                            newimgheight = (group.width * group.scaleX) / (img.width / img.height);
-                            group.item(1).set('scaleX', newimgwidth / img.width / group.scaleX);
-                            group.item(1).set('scaleY', newimgheight / img.height / group.scaleY);
-                        } else {
-                            newimgheight = (group.height * group.scaleY);
-                            newimgwidth = (group.height * group.scaleY) * (img.width / img.height);
-                            group.item(1).set('scaleX', newimgwidth / img.width / group.scaleX);
-                            group.item(1).set('scaleY', newimgheight / img.height / group.scaleY);
-                        }
-                        canvas.requestRenderAll();
-                        canvas.renderAll();
-                    });
+                  group.on('scaling', async function (e) {
+                    let src = group.url
+                    let img = await that.loadImage(src)
+                    let newimgwidth = 0
+                    let newimgheight = 0
+
+                    if (group.imgText === 'equal') {
+                      if (img.width / img.height > (group.width * group.scaleX) / (group.height * group.scaleY)) {
+                        newimgwidth = (group.width * group.scaleX)
+                        newimgheight = (group.width * group.scaleX) / (img.width / img.height)
+                        group.item(1).set('scaleX', newimgwidth / img.width / group.scaleX)
+                        group.item(1).set('scaleY', newimgheight / img.height / group.scaleY)
+                      } else {
+                        newimgheight = (group.height * group.scaleY)
+                        newimgwidth = (group.height * group.scaleY) * (img.width / img.height)
+                        group.item(1).set('scaleX', newimgwidth / img.width / group.scaleX)
+                        group.item(1).set('scaleY', newimgheight / img.height / group.scaleY)
+                      }
+                    }
+
+                    canvas.requestRenderAll()
+                    canvas.renderAll()
+                  })
 
 
                     group.setControlsVisibility({
@@ -5899,7 +5955,7 @@
                         ml: true,
                         mr: true,
                         mt: true,
-                        mtr: false,
+                        mtr: true,
                         tl: true,
                         tr: true
                     });
@@ -5919,6 +5975,71 @@
             });
         },
 
+      // 提前加载图片
+      loadImage (url) {
+        return new Promise((resolve, reject) => {
+          let img = new Image()
+          img.setAttribute('crossOrigin', 'Anonymous')
+          img.src = url
+          // console.log(img.readyState, img.complete)
+          if (img.complete) { // 如果图片已经存在于浏览器缓存，直接调用回调函数
+            resolve(img)
+            return // 直接返回，不用再处理onload事件
+          }
+          img.onload = async () => {
+            resolve(img)
+          }
+          img.onerror = async (err) => {
+            reject(err)
+          }
+        })
+      },
+      // 传入元素(类型Image, equalImage)改变图片
+      async setSrc (cur, src) {
+        if (cur.isType !== 'Image' && cur.isType !== 'equalImage') { return }
+        let oldwidth = JSON.parse(JSON.stringify(cur.width * cur.scaleX))
+        let oldheight = JSON.parse(JSON.stringify(cur.height * cur.scaleY))
+        let imgwidth, imgheight
+        let ImgDom = cur
+        if (cur.isType === 'equalImage' || cur.isType === 'Image') { ImgDom = cur.item(1) }
+        let img = await this.loadImage(src)
+        cur.set('url', src)
+        // console.log(img, img.width, img.height)
+        let newcur = ImgDom.setElement(img)
+        if ((cur.isType === 'equalImage' || cur.isType === 'Image') && cur.imgText === 'equal') {
+          // console.log('适应')
+          if (img.width / img.height > (cur.width * cur.scaleX) / (cur.height * cur.scaleY)) {
+            imgwidth = (cur.width * cur.scaleX)
+            imgheight = (cur.width * cur.scaleX) / (img.width / img.height)
+            newcur.set({
+              scaleX: imgwidth / img.width / cur.scaleX,
+              scaleY: imgheight / img.height / cur.scaleY
+            })
+          } else {
+            imgheight = (cur.height * cur.scaleY)
+            imgwidth = (cur.height * cur.scaleY) * (img.width / img.height)
+            newcur.set({
+              scaleX: imgwidth / img.width / cur.scaleX,
+              scaleY: imgheight / img.height / cur.scaleY
+            })
+          }
+        } else if ((cur.isType === 'equalImage' || cur.isType === 'Image') && cur.imgText === '') {
+          // console.log('拉伸', oldwidth, img.width)
+          newcur.set({
+            scaleX: oldwidth / img.width / cur.scaleX,
+            scaleY: oldheight / img.height / cur.scaleY
+          })
+        } else {
+          newcur.set({
+            scaleX: oldwidth / img.width,
+            scaleY: oldheight / img.height
+          })
+        }
+
+        newcur.setCoords()
+        this.canvas.renderAll()
+        this.canvas.requestRenderAll()
+      },
 
         //刷新渲染页面
         renderCanvas() {

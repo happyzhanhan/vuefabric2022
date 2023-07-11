@@ -253,6 +253,19 @@
                @dblclick="draw('Dottedline')"
             ></i>
 
+            <!--图片-->
+            <i class="ps-icon83 ps-icon"
+               @dblclick="draw('Image')"
+            ></i>
+            <!--图片-->
+            <i class="ps-icon83 ps-icon"
+               @dblclick="draw('equalImage')"
+            ></i>
+            <!--图标-->
+            <i class="ps-icon83 ps-icon"
+               @dblclick="draw('Icon')"
+            ></i>
+
             <i class="line-h"></i>
             <!-- @contextmenu.prevent="openMenu($event)"-->
             <i class="ps-icon9 ps-icon"  :class="hover9index=='1'? (currentMenu==='tuozhuai'?'ps-icon92 hover':'ps-icon92'):(currentMenu==='tuozhuai'?'hover':'')"
@@ -1042,6 +1055,53 @@
                         }
                         break;
 
+                    case 'Image':
+                        let imgurl = 'http://183.134.78.46:81/group1/M00/01/10/rBMAA2KHQraAE4fbAAAIabvbb5U379.jpg' // 'http://183.134.78.46:81/group1/M00/01/10/rBMAA2KHQraAE4fbAAAIabvbb5U379.jpg'
+                        options = {
+                            left: 10,
+                            top: 200,
+                            width: 200,
+                            height: 100,
+                            src: imgurl,
+                            url: imgurl,
+                            opacity: 0.5,
+                            stroke: '#ff0000',
+                            strokeWidth: 0,
+                            imgText: '',
+                            visible: true
+                        }
+                        break
+
+                    case 'equalImage':
+                        options = {
+                            left: 10,
+                            top: 200,
+                            width: 200,
+                            height: 100,
+                            angle:45,
+                            src: imgurl,
+                            url: imgurl,
+                            opacity: 0.5,
+                            stroke: '#ff0000',
+                            strokeWidth: 0,
+                            imgText: '', //equal
+                            visible: true
+                        }
+                        break;
+                    case 'Icon':
+                        let iconurl = 'http://img.daimg.com/uploads/allimg/201010/3-2010101J545.jpg'
+                        options = {
+                            left: 100,
+                            top: 200,
+                            width: 200,
+                            height: 100,
+                            src: iconurl,
+                            url: iconurl,
+                            stroke: '#ff0000',
+                            strokeWidth: 0,
+                            visible: true
+                        }
+                        break
                      default:
                         options = {
                             left:0,
